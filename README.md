@@ -28,6 +28,8 @@ and refers to remote as `ec2-instance`
 Remote system commands supported should include at least:
 * `cat` to `crontab`, `/etc/fstab`, and `authorized_keys`
 * `pip`
+* `cd`
+* `mkdir`
 * `apt-get update`, `apt-get upgrade`, `apt-get dist-upgrade`
 * `apt-get install`
 * `mount`
