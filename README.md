@@ -51,3 +51,10 @@ and run the `ansible-gen.py` to get fully functional template of ansible script.
 A lot of configuration tasks do not require tuning, and are done just a few times.
 Investing in development of Ansible scripts to run them seems a waste of time.
 
+
+# Stage 2
+
+We would also like to copy&paste AWS instance config we make in GUI, and then put it into Git repo.
+Then we want to setup the instance from scratch with the very Ansible script we generate.
+
+[And we already know instance name, so we should be able to pull Amazon config easily, don't we?]
