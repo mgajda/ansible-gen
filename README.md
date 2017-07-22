@@ -35,6 +35,12 @@ Remote system commands supported should include at least:
 ### On local
 * `scp`
 
+### Phase 2 functionality on the remote
+* `npm install`, and `npm update`
+* `bower install`, and `bower update`
+* `cp` service file to `nginx` directory
+* `docker run`, and `docker exec`
+
 ## Ideal use case
 
 User should be able to copy his local, and remote `.bash_history` file, remove unnecessary commands,
