@@ -30,6 +30,7 @@ Remote system commands supported should include at least:
 * `pip`
 * `cd`
 * `mkdir`
+* `rm` and `rm -rf`
 * `apt-get update`, `apt-get upgrade`, `apt-get dist-upgrade`
 * `apt-get install`
 * `mount`
