@@ -1,70 +1,72 @@
 ---
 - environment:
     PWD: /home/ubuntu
-  sudo: 'yes'
+  remote_user: ubuntu
   hosts: ec2
   name: Bash converted playbook
-  remote_user: ubuntu
   tasks:
   - name: change directory
     set_fact:
       cwd: /home/ubuntu
-  - name: Run apt-get update
+  - sudo: 'yes'
+    name: Run apt-get update
     apt:
       update_cache: 'yes'
-  - name: Run apt-get dist-upgrade
+  - sudo: 'yes'
+    name: Run apt-get dist-upgrade
     apt:
       upgrade: dist
-  - name: Install package
+  - sudo: 'yes'
+    name: Install package
     apt:
-      name: python-pip
+      name: '{{ item }}'
       state: present
-  - name: Install package
-    apt:
-      name: chromium-browser
-      state: present
-  - name: Install package
-    apt:
-      name: chromium-chromedriver
-      state: present
-  - name: Create directory
+    with_items:
+    - python-pip
+    - chromium-browser
+    - chromium-chromedriver
+  - sudo: 'no'
+    name: Create directory
     file:
       path: /media/scraped
       state: directory
-  - name: chown directory
+  - sudo: 'no'
+    name: chown directory
     file:
       dest: /media/scraped
       group: ubuntu
       owner: ubuntu
       recurse: 'yes'
   - shell: echo /dev/xvdp /media/scraped/ ext4 auto 0 1 >> /etc/fstab
+    sudo: 'no'
     name: echo
   - mount:
       path: /media/scraped
+    sudo: 'no'
     name: Mount directory
-  - name: chown directory
+  - sudo: 'no'
+    name: chown directory
     file:
       dest: /media/scraped
       group: ubuntu
       owner: ubuntu
       recurse: 'yes'
   - shell: cd {{ cwd }} && git clone git@github.com:mgajda/scraper-python.git
+    sudo: 'no'
     name: Git clone
   - name: change directory
     set_fact:
       cwd: scraper-python
   - pip:
       requirements: '{{ cwd }}/requirment.txt'
+    sudo: 'no'
     name: pip packages
-  - name: rm dir
+  - sudo: 'no'
+    name: Remove Directory
     file:
-      path: '{{ cwd }}/html'
+      path: '{{ item }}'
       state: absent
-  - name: rm dir
-    file:
-      path: '{{ cwd }}/logs'
-      state: absent
-  - name: rm dir
-    file:
-      path: '{{ cwd }}/output_csv'
-      state: absent
+    with_items:
+    - '{{ cwd }}/html'
+    - '{{ cwd }}/logs'
+    - '{{ cwd }}/output_csv'
