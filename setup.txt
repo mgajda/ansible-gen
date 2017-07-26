@@ -1,0 +1,24 @@
+pip package requirments:
+
+- pyxml
+- boto 
+
+Stage1:
+-------
+Execution
+- Use ansible_execute.sh script to execute playbook
+- Currently I am using static inventory script to reach to hosts using ip,
+- Need to change ip in hosts file in repo directory
+- Need to replace ssh keys name and it-self key in ansible_execute.sh script
+- Execute ansible_execute.sh 
+
+Stage2:
+-------
+For stage 2:
+I will use dynamic inventory.
+I have added ec2.py and ec2.ini in repo
+I have check above ansible script with dynamic ansible inventory(it is working), just configuring, using tag(Name=client1) (No need of ip)
+Later on we will also provision instance with ec2.py
+
+Save config:
+we can use ./ec2.py --list (or ./ec2.py --host blahblah) to save config of existing hosts, and later on can use that config for instance provisioning, along with software config.
