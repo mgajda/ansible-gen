@@ -20,9 +20,11 @@ class UnsortableOrderedDict(OrderedDict):
 yaml.add_representer(UnsortableOrderedDict, yaml.representer.SafeRepresenter.represent_dict)
 
 # Start creating first play in yml
-header=[UnsortableOrderedDict({'name': 'Bash converted playbook', \
-	'hosts': HOST,'remote_user': REMOTE_USER, 'environment': {'PWD':'/home/ubuntu'}})]
-header[0]['tasks'] = [{'name':'change directory','set_fact':{'cwd': HOME_DIRECTORY}}]  # Initially set current working directory as home directory
+#header=[UnsortableOrderedDict({'name': 'Bash converted playbook', \
+#	'hosts': HOST,'remote_user': REMOTE_USER, 'environment': {'PWD':'/home/ubuntu'}})]
+header=[UnsortableOrderedDict([ ('name', 'Bash converted playbook'), \
+	('hosts', HOST), ('remote_user', REMOTE_USER), ('environment', {'PWD':'/home/ubuntu'}) ])]
+header[0]['tasks'] = [{'name':'Set default working directory','set_fact':{'cwd': HOME_DIRECTORY}}]  # Initially set current working directory as home directory
 
 # Read the bash history file
 i=0
@@ -40,41 +42,50 @@ with open(BASH_HISTORY,'r') as f:
 			# Start handling following commands
 			elif 'apt-get' in cmd_arr:
 				if 'install' in cmd_arr:
+					command_line=" ".join(cmd_arr)
 					if 'sudo' in cmd_arr: 
 						cmd_arr.remove('sudo')
 						sudo='yes'
 					if '-y' in cmd_arr: cmd_arr.remove('-y')
 					if 'apt-get' in cmd_arr: cmd_arr.remove('apt-get')
 					if 'install' in cmd_arr: cmd_arr.remove('install')
-					new_task=UnsortableOrderedDict({'name':'Install package', 'sudo':sudo, \
-							'apt':{'name':'{{ item }}','state':'present'}})
+					#new_task=UnsortableOrderedDict({'name':command_line, 'sudo':sudo, \
+					#		'apt':{'name':'{{ item }}','state':'present'}})
+					new_task=UnsortableOrderedDict([ ('name',command_line), ('sudo',sudo), \
+							('apt',{'name':'{{ item }}','state':'present'}) ])
 					packages = []
 					for package in cmd_arr: # Here we have list of packages to be install
 						packages.append(package)
 					new_task['with_items'] = packages
 					header[0]['tasks'].append(new_task)
 				elif 'update;' in cmd_arr:
+					command_line=" ".join(cmd_arr)
 					if 'sudo' in cmd_arr: 
 						cmd_arr.remove('sudo')
 						sudo='yes'
-					new_task=UnsortableOrderedDict({'name':'Run apt-get update','sudo':sudo,'apt':{'update_cache':'yes'}})
+					#new_task=UnsortableOrderedDict({'name':command_line,'sudo':sudo,'apt':{'update_cache':'yes'}})
+					new_task=UnsortableOrderedDict([ ('name', command_line), ('sudo',sudo) ,('apt',{'update_cache':'yes'}) ])
 					header[0]['tasks'].append(new_task)
 				elif 'dist-upgrade' in cmd_arr:
+					command_line=" ".join(cmd_arr)
 					if 'sudo' in cmd_arr: 
 						cmd_arr.remove('sudo')
 						sudo='yes'
-					new_task=UnsortableOrderedDict({'name':'Run apt-get dist-upgrade','sudo':sudo,'apt':{'upgrade':'dist'}})
+					#new_task=UnsortableOrderedDict({'name':command_line,'sudo':sudo,'apt':{'upgrade':'dist'}})
+					new_task=UnsortableOrderedDict([ ('name',command_line), ('sudo',sudo), ('apt',{'upgrade':'dist'}) ])
 					header[0]['tasks'].append(new_task)
 				else:
 					print("apt-get argument not supported")
 
 			elif 'pip' in cmd_arr:
+				command_line=" ".join(cmd_arr)
 				if 'sudo' in cmd_arr: 
 					cmd_arr.remove('sudo')
 					sudo='yes'
 				if '-r' in cmd_arr:
 					cmd_arr.remove('-r')
-					new_task=UnsortableOrderedDict({'name':'pip packages','sudo':sudo,'pip': {'requirements': '{{ cwd }}/requirment.txt'}})
+					#new_task=UnsortableOrderedDict({'name':command_line,'sudo':sudo,'pip': {'requirements': '{{ cwd }}/requirment.txt'}})
+					new_task=UnsortableOrderedDict([ ('name',command_line), ('sudo',sudo), ('pip', {'requirements': '{{ cwd }}/requirment.txt'}) ])
 					header[0]['tasks'].append(new_task)
 				#elif (pakcages list in argument -> case need to implement )
 
@@ -84,63 +95,80 @@ with open(BASH_HISTORY,'r') as f:
 				print(cmd_arr[1])
 
 			elif 'echo' in cmd_arr:
+				command_line=" ".join(cmd_arr)
 				if 'sudo' in cmd_arr: 
 					cmd_arr.remove('sudo')
 					sudo='yes'
 				echo_line=" ".join(cmd_arr)
-				new_task=UnsortableOrderedDict({'name':'echo','sudo':sudo,'shell': echo_line })
+				#new_task=UnsortableOrderedDict({'name':command_line,'sudo':sudo,'shell': echo_line })
+				new_task=UnsortableOrderedDict([ ('name',command_line), ('sudo',sudo), ('shell', echo_line) ])
 				header[0]['tasks'].append(new_task)
 
 			elif 'cd' in cmd_arr: # I am using fact variable to keep track of current working directory
-				new_task=UnsortableOrderedDict({'name':'change directory','set_fact':{'cwd': cmd_arr[1]}})	
+				command_line=" ".join(cmd_arr)
+				#new_task=UnsortableOrderedDict({'name':command_line,'set_fact':{'cwd': cmd_arr[1]}})	
+				new_task=UnsortableOrderedDict([ ('name',command_line),('set_fact',{'cwd': cmd_arr[1]}) ])	
 				header[0]['tasks'].append(new_task)
 
 			elif 'chown' in cmd_arr:
+				command_line=" ".join(cmd_arr)
 				if 'sudo' in cmd_arr: 
 					cmd_arr.remove('sudo')
 					sudo='yes'
 				if '-R' in cmd_arr: cmd_arr.remove('-R')
 				user=cmd_arr[1].split(':')[0]
 				group=cmd_arr[1].split(':')[1]
-				new_task=UnsortableOrderedDict({'name':'chown directory', 'sudo': sudo, \
-					'file':{'dest':cmd_arr[2],'owner':user,'group':group,'recurse':'yes'}})
+				#new_task=UnsortableOrderedDict({'name':command_line, 'sudo': sudo, \
+				#	'file':{'dest':cmd_arr[2],'owner':user,'group':group,'recurse':'yes'}})
+				new_task=UnsortableOrderedDict([ ('name',command_line), ('sudo', sudo), \
+					('file',{'dest':cmd_arr[2],'owner':user,'group':group,'recurse':'yes'}) ])
 				header[0]['tasks'].append(new_task)
 
 			elif 'mkdir' in cmd_arr:
+				command_line=" ".join(cmd_arr)
 				if 'sudo' in cmd_arr: 
 					cmd_arr.remove('sudo')
 					sudo='yes'
 				if 'mkdir' in cmd_arr: cmd_arr.remove('mkdir')
 				if '-p' in cmd_arr: cmd_arr.remove('-p') # May be we have -p option
 				for item in cmd_arr: # Here we have list of directories to be created
-					new_task=UnsortableOrderedDict({'name':'Create directory','sudo':sudo, \
-						'file': {'path': item, 'state':'directory'}})
+					#new_task=UnsortableOrderedDict({'name':command_line,'sudo':sudo, \
+					#	'file': {'path': item, 'state':'directory'}})
+					new_task=UnsortableOrderedDict([ ('name',command_line), ('sudo',sudo), \
+						('file', {'path': item, 'state':'directory'}) ])
 					header[0]['tasks'].append(new_task)
 					# currently only handle absolute path, will create case of relative path if needed
  
 			elif 'mount' in cmd_arr:
+				command_line=" ".join(cmd_arr)
 				if 'sudo' in cmd_arr: 
 					cmd_arr.remove('sudo')
 					sudo='yes'
-				new_task=UnsortableOrderedDict({'name':'Mount directory', 'sudo':sudo, 'mount': {'path': cmd_arr[1]}})
+				new_task=UnsortableOrderedDict([('name',command_line), ('sudo',sudo), ('mount', {'path': cmd_arr[1]})])
+				#new_task=UnsortableOrderedDict({'name':command_line, 'sudo':sudo, 'mount': {'path': cmd_arr[1]}})
 				header[0]['tasks'].append(new_task)
 
 			elif 'git' in cmd_arr:
+				command_line=" ".join(cmd_arr)
 				if 'sudo' in cmd_arr: 
 					cmd_arr.remove('sudo')
 					sudo='yes'
 				git_line=" ".join(cmd_arr)
-				new_task=UnsortableOrderedDict({'name':'Git clone','sudo':sudo, 'shell': 'cd {{ cwd }} && '+ git_line})
+				#new_task=UnsortableOrderedDict({'name':command_line,'sudo':sudo, 'shell': 'cd {{ cwd }} && '+ git_line})
+				new_task=UnsortableOrderedDict([ ('name',command_line),('sudo',sudo), ('shell', 'cd {{ cwd }} && '+ git_line) ])
 				header[0]['tasks'].append(new_task)
 
 			elif 'rm' in cmd_arr:
+				command_line=" ".join(cmd_arr)
 				if 'sudo' in cmd_arr: 
 					cmd_arr.remove('sudo')
 					sudo='yes'
 				if 'rm' in cmd_arr: cmd_arr.remove('rm')
 				if '-rf' in cmd_arr: cmd_arr.remove('-rf')
-				new_task=UnsortableOrderedDict({'name':'Remove Directory', 'sudo':sudo, \
-							'file':{'path':'{{ item }}','state':'absent'}})
+				#new_task=UnsortableOrderedDict({'name':command_line, 'sudo':sudo, \
+				#			'file':{'path':'{{ item }}','state':'absent'}})
+				new_task=UnsortableOrderedDict([ ('name',command_line), ('sudo',sudo), \
+							('file',{'path':'{{ item }}','state':'absent'}) ])
 				dirs = []
 				for item in cmd_arr: # Here we have list of directories to be deleted
 					dirs.append("{{ cwd }}/"+ item)

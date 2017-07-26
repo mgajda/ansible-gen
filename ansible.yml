@@ -1,23 +1,23 @@
 ---
-- environment:
-    PWD: /home/ubuntu
-  remote_user: ubuntu
+- name: Bash converted playbook
   hosts: ec2
-  name: Bash converted playbook
+  remote_user: ubuntu
+  environment:
+    PWD: /home/ubuntu
   tasks:
-  - name: change directory
+  - name: Set default working directory
     set_fact:
       cwd: /home/ubuntu
-  - sudo: 'yes'
-    name: Run apt-get update
+  - name: sudo apt-get update;
+    sudo: 'yes'
     apt:
       update_cache: 'yes'
-  - sudo: 'yes'
-    name: Run apt-get dist-upgrade
+  - name: sudo apt-get dist-upgrade -y;
+    sudo: 'yes'
     apt:
       upgrade: dist
-  - sudo: 'yes'
-    name: Install package
+  - name: sudo apt-get install -y python-pip chromium-browser chromium-chromedriver
+    sudo: 'yes'
     apt:
       name: '{{ item }}'
       state: present
@@ -25,44 +25,44 @@
     - python-pip
     - chromium-browser
     - chromium-chromedriver
-  - sudo: 'no'
-    name: Create directory
+  - name: mkdir /media/scraped
+    sudo: 'no'
     file:
       path: /media/scraped
       state: directory
-  - sudo: 'no'
-    name: chown directory
+  - name: chown ubuntu:ubuntu /media/scraped
+    sudo: 'no'
     file:
       dest: /media/scraped
       group: ubuntu
       owner: ubuntu
       recurse: 'yes'
-  - shell: echo /dev/xvdp /media/scraped/ ext4 auto 0 1 >> /etc/fstab
+  - name: echo /dev/xvdp /media/scraped/ ext4 auto 0 1 >> /etc/fstab
     sudo: 'no'
-    name: echo
-  - mount:
+    shell: echo /dev/xvdp /media/scraped/ ext4 auto 0 1 >> /etc/fstab
+  - name: mount /media/scraped
+    sudo: 'no'
+    mount:
       path: /media/scraped
+  - name: chown -R ubuntu:ubuntu /media/scraped
     sudo: 'no'
-    name: Mount directory
-  - sudo: 'no'
-    name: chown directory
     file:
       dest: /media/scraped
       group: ubuntu
       owner: ubuntu
       recurse: 'yes'
-  - shell: cd {{ cwd }} && git clone git@github.com:mgajda/scraper-python.git
+  - name: git clone git@github.com:mgajda/scraper-python.git
     sudo: 'no'
-    name: Git clone
-  - name: change directory
+    shell: cd {{ cwd }} && git clone git@github.com:mgajda/scraper-python.git
+  - name: cd scraper-python
     set_fact:
       cwd: scraper-python
-  - pip:
-      requirements: '{{ cwd }}/requirment.txt'
+  - name: pip install -r requirements.txt
     sudo: 'no'
-    name: pip packages
-  - sudo: 'no'
-    name: Remove Directory
+    pip:
+      requirements: '{{ cwd }}/requirment.txt'
+  - name: rm -rf html logs output_csv
+    sudo: 'no'
     file:
       path: '{{ item }}'
       state: absent
