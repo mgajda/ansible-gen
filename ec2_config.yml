@@ -1,0 +1,5 @@
+instance_type: t2.micro
+security_group: sg-c442e9bd
+image: ami-d37961b5
+region: eu-west-1
+keypair: mhassan
