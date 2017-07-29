@@ -1,7 +1,7 @@
 #!/bin/python
 
 #
-# get ec3 instance config from aws and save ins ec2_config.yml
+# get ec2 instance config from aws and save in ec2_config.yml
 # which use ansible playbook for provisioning similar instances
 #
 
