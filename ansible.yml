@@ -8,6 +8,14 @@
   - name: Set default working directory
     set_fact:
       cwd: /home/ubuntu
+  - name: scp ansible/* ie-scraper:.ssh/
+    sudo: 'no'
+    local_action: shell ls ansible/*| awk -F "/" '{print $NF}'
+    register: key_file
+  - copy:
+      dest: '{{ cwd }}/.ssh//{{ item }}'
+      src: ansible/{{ item }}
+    with_items: '{{ key_file.stdout_lines }}'
   - name: sudo apt-get update;
     sudo: 'yes'
     apt:
