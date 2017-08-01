@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import yaml
 from collections import OrderedDict
+import re
 
 # Local variables
 BASH_HISTORY='bash_history'
@@ -177,19 +178,41 @@ with open(BASH_HISTORY,'r') as f:
 					# currently only handle relative path, will create case of absolute path if needed 
 			elif 'scp' in cmd_arr:
 				command_line=" ".join(cmd_arr)
+				dir_flag=None
+				wildcard="no"
 				if 'sudo' in cmd_arr: 
 					cmd_arr.remove('sudo')
 					sudo='yes'
-				src_loc=cmd_arr[1].rsplit('/',1)
+				if '-r' in cmd_arr:
+					cmd_arr.remove('-r')
+				if '*' in cmd_arr[1]:
+					wildcard='yes'
+					cmd_arr[1] = re.sub('[*]', '', cmd_arr[1])
 				dst_path=cmd_arr[2].split(":")[1]
-				# wild card case
-				new_task=UnsortableOrderedDict([ ('name',command_line), ('sudo',sudo), \
-							('local_action','shell ls '+cmd_arr[1]+'| awk -F "/" \'{print $NF}\''), ('register','key_file') ])
-				header[0]['tasks'].append(new_task)
-				new_task=UnsortableOrderedDict([ \
-							('copy',{'src':''+src_loc[0]+'/{{ item }}','dest':'{{ cwd }}/'+dst_path+'/{{ item }}' }), 
+				if dst_path[0] is '/':
+					# absolute path
+					dst=dst_path
+				else:
+					# relative path
+					dst='{{ cwd }}/'+dst_path
+				if wildcard == 'no':
+					new_task=UnsortableOrderedDict([ ('name',command_line), ('sudo',sudo), \
+							('copy',{'src': cmd_arr[1] \
+							,'dest': dst }) ]) 
+					header[0]['tasks'].append(new_task)
+				else:
+					src_loc=cmd_arr[1].rsplit('/',1)
+					# wild card case
+					new_task=UnsortableOrderedDict([ ('name',command_line), ('sudo',sudo), \
+							#('local_action','shell ls '+cmd_arr[1]+'| awk -F "/" \'{print $NF}\''), \
+							('local_action','shell ls '+cmd_arr[1]), \
+							('register','key_file') ])
+					header[0]['tasks'].append(new_task)
+					new_task=UnsortableOrderedDict([ \
+							('copy',{'src': ''+src_loc[0]+'/{{ item }}', \
+							'dest': dst+'/{{ item }}' }), 
 							('with_items',"{{ key_file.stdout_lines }}") ])
-				header[0]['tasks'].append(new_task)
+					header[0]['tasks'].append(new_task)
 			else:
 				if 'sudo' in cmd_arr: cmd_arr.remove('sudo')
 				print("Command "+ cmd_arr[0]+" not implemented or not found. Line no " + str(i))
