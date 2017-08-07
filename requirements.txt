@@ -1,0 +1,3 @@
+pyxml
+boto
+boto3
