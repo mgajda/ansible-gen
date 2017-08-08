@@ -175,7 +175,34 @@ with open(BASH_HISTORY,'r') as f:
 					dirs.append("{{ cwd }}/"+ item)
 				new_task['with_items'] = dirs
 				header[0]['tasks'].append(new_task)
-					# currently only handle relative path, will create case of absolute path if needed 
+					# currently only handle relative path, will create case of absolute path if needed
+			elif 'docker' in cmd_arr:
+				command_line=" ".join(cmd_arr)
+				if 'sudo' in cmd_arr: 
+					cmd_arr.remove('sudo')
+					sudo='yes'
+				if 'build' in cmd_arr:
+					dockerfile=None
+					durl=None
+					dname=None
+					dtag=None 
+					if 'docker' in cmd_arr: cmd_arr.remove('docker')
+					if 'build' in cmd_arr: cmd_arr.remove('build')
+					it = iter(cmd_arr)
+					for opt in it:
+						if opt == '-f':
+							dockerfile = next(it)
+						elif opt == '-t':
+							durl = next(it)
+							dname = durl.split(":")[0]
+							dtag = durl.split(":")[1]
+						else:
+							print opt
+					new_task=UnsortableOrderedDict([ ('name',command_line),('sudo',sudo), ('docker_image', {'dockerfile': dockerfile, 'name': dname, 'tag': dtag, 'path': '{{ cwd }}'}) ])
+					header[0]['tasks'].append(new_task)
+									
+					print cmd_arr[0]
+					
 			elif 'scp' in cmd_arr:
 				command_line=" ".join(cmd_arr)
 				dir_flag=None
@@ -189,7 +216,11 @@ with open(BASH_HISTORY,'r') as f:
 					wildcard='yes'
 					cmd_arr[1] = re.sub('[*]', '', cmd_arr[1])
 				dst_path=cmd_arr[2].split(":")[1]
-				if dst_path[0] is '/':
+				print dst_path
+				if dst_path is "":
+					print dst_path
+					dst='{{ cwd }}'
+				elif dst_path[0] is '/':
 					# absolute path
 					dst=dst_path
 				else:

@@ -8,70 +8,18 @@
   - name: Set default working directory
     set_fact:
       cwd: /home/ubuntu
-  - name: scp -r ansible ie-scraper:/home/ubuntu/.ssh/
+  - name: 'scp -r dockerProject targetHost:'
     sudo: 'no'
     copy:
-      dest: /home/ubuntu/.ssh/
-      src: ansible
-  - name: sudo apt-get update;
-    sudo: 'yes'
-    apt:
-      update_cache: 'yes'
-  - name: sudo apt-get dist-upgrade -y;
-    sudo: 'yes'
-    apt:
-      upgrade: dist
-  - name: sudo apt-get install -y python-pip chromium-browser chromium-chromedriver
-    sudo: 'yes'
-    apt:
-      name: '{{ item }}'
-      state: present
-    with_items:
-    - python-pip
-    - chromium-browser
-    - chromium-chromedriver
-  - name: mkdir /media/scraped
-    sudo: 'no'
-    file:
-      path: /media/scraped
-      state: directory
-  - name: chown ubuntu:ubuntu /media/scraped
-    sudo: 'no'
-    file:
-      dest: /media/scraped
-      group: ubuntu
-      owner: ubuntu
-      recurse: 'yes'
-  - name: echo /dev/xvdp /media/scraped/ ext4 auto 0 1 >> /etc/fstab
-    sudo: 'no'
-    shell: echo /dev/xvdp /media/scraped/ ext4 auto 0 1 >> /etc/fstab
-  - name: mount /media/scraped
-    sudo: 'no'
-    mount:
-      path: /media/scraped
-  - name: chown -R ubuntu:ubuntu /media/scraped
-    sudo: 'no'
-    file:
-      dest: /media/scraped
-      group: ubuntu
-      owner: ubuntu
-      recurse: 'yes'
-  - name: git clone git@github.com:mgajda/scraper-python.git
-    sudo: 'no'
-    shell: cd {{ cwd }} && git clone git@github.com:mgajda/scraper-python.git
-  - name: cd scraper-python
+      dest: '{{ cwd }}'
+      src: dockerProject
+  - name: cd dockerProject
     set_fact:
-      cwd: scraper-python
-  - name: pip install -r requirements.txt
-    sudo: 'no'
-    pip:
-      requirements: '{{ cwd }}/requirment.txt'
-  - name: rm -rf html logs output_csv
-    sudo: 'no'
-    file:
-      path: '{{ item }}'
-      state: absent
-    with_items:
-    - '{{ cwd }}/html'
-    - '{{ cwd }}/logs'
-    - '{{ cwd }}/output_csv'
+      cwd: dockerProject
+  - name: sudo docker build -f Dockerfile-cpu -t ihaskell-nlp:latest .
+    sudo: 'yes'
+    docker_image:
+      dockerfile: Dockerfile-cpu
+      name: ihaskell-nlp
+      path: '{{ cwd }}'
+      tag: latest
