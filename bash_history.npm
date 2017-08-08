@@ -1,0 +1,9 @@
+scp cordovaProject remoteHost:
+ssh remoteHost <<ENDREMOTE
+sudo apt-get install -y node npm
+sudo npm install -g bower # install bower to the global path
+npm install # install all packages in packages.json
+bower install # install all packages in bower.json
+export NODE_PATH=.
+node src/myScript.js # uses NODE_PATH to find npm modules
+ENDREMOTE

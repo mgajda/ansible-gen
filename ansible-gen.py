@@ -2,12 +2,31 @@
 import yaml
 from collections import OrderedDict
 import re
+import getopt, sys
 
 # Local variables
 BASH_HISTORY='bash_history'
 REMOTE_USER='ubuntu'
 HOST='ec2'
 HOME_DIRECTORY='/home/ubuntu'
+
+try:
+	opts, args = getopt.getopt(sys.argv[1:], 'hi:o:tbpms:', ['help', 'input='])
+    	if not opts:
+      		print 'No options supplied'
+  		print '\nUsage: '+sys.argv[0]+' -i <file1>'
+    		sys.exit(2)
+except getopt.GetoptError,e:
+	print e
+  	print '\nUsage: '+sys.argv[0]+' -i <file1>'
+    	sys.exit(2)
+name=None
+for opt, arg in opts:
+	if opt in ('-h', '--help'):
+  		print '\nUsage: '+sys.argv[0]+' -i <file1>'
+      		sys.exit(2)
+    	elif opt in ("-i", "--input"):
+      		name = arg
 
 # Just define it for maintain order in yml
 class UnsortableList(list):
@@ -29,18 +48,20 @@ header[0]['tasks'] = [{'name':'Set default working directory','set_fact':{'cwd':
 
 # Read the bash history file
 i=0
-with open(BASH_HISTORY,'r') as f:
+with open(name,'r') as f:
 	for line in f:
 		i += 1
 		if not line.strip():
 			print("We got empty line.")
 		else:
-			cmd_arr=line.split()
+			line_without_comment=line.split('#',1)[0]
+			cmd_arr=line_without_comment.split()
 			sudo='no'
-			if cmd_arr[0] is '#':
+			if not cmd_arr:
 				print("Comment line. Ignoring")
 
 			# Start handling following commands
+			#if 'apt-get' in cmd_arr:
 			elif 'apt-get' in cmd_arr:
 				if 'install' in cmd_arr:
 					command_line=" ".join(cmd_arr)
@@ -200,9 +221,49 @@ with open(BASH_HISTORY,'r') as f:
 							print opt
 					new_task=UnsortableOrderedDict([ ('name',command_line),('sudo',sudo), ('docker_image', {'dockerfile': dockerfile, 'name': dname, 'tag': dtag, 'path': '{{ cwd }}'}) ])
 					header[0]['tasks'].append(new_task)
-									
-					print cmd_arr[0]
+				if 'run' in cmd_arr:
+					ports=None; inner=None; outer=None
+					if 'docker' in cmd_arr: cmd_arr.remove('docker')
+					if 'run' in cmd_arr: cmd_arr.remove('run')
+					it = iter(cmd_arr)
+					for opt in it:
+						if opt == '-p':
+							ports = next(it)
+							print ports
+							inner=ports.split(":")[0]
+							outer=ports.split(":")[1]
+						elif opt == '-v':
+							volumes = next(it)
+						else:
+							image = opt
+					new_task=UnsortableOrderedDict([ ('name',command_line),('sudo',sudo), ('docker', {'image': image, 'state': 'started', 'ports': ([ports]) }) ])
+					header[0]['tasks'].append(new_task)
 					
+			elif 'npm' in cmd_arr:
+				command_line=" ".join(cmd_arr)
+				global_flag='no'
+				if 'sudo' in cmd_arr: 
+					cmd_arr.remove('sudo')
+					sudo='yes'
+				cmd_arr.remove('npm')
+				cmd_arr.remove('install')
+				if not cmd_arr: # Must be package.json
+					new_task=UnsortableOrderedDict([ ('name',command_line),('sudo',sudo), ('npm', {'path': '{{ cwd }}' })])
+				else:	
+					if '-g' in cmd_arr:
+						cmd_arr.remove('-g')
+						global_flag='yes'
+					new_task=UnsortableOrderedDict([ ('name',command_line),('sudo',sudo), ('npm', {'name': cmd_arr[0], 'global': global_flag }) ])
+				header[0]['tasks'].append(new_task)
+
+			elif 'bower' in cmd_arr:
+				command_line=" ".join(cmd_arr)
+				if 'sudo' in cmd_arr: 
+					cmd_arr.remove('sudo')
+					sudo='yes'
+				new_task=UnsortableOrderedDict([ ('name',command_line),('sudo',sudo), ('bower', {'path': '{{ cwd }}' })])
+				header[0]['tasks'].append(new_task)
+			
 			elif 'scp' in cmd_arr:
 				command_line=" ".join(cmd_arr)
 				dir_flag=None
