@@ -1,0 +1,47 @@
+---
+- name: Bash converted playbook
+  connection: localhost
+  hosts: localhost
+  remote_user: ubuntu
+  environment:
+    PWD: /home/ubuntu
+  tasks:
+  - name: Set default working directory
+    set_fact:
+      cwd: /home/ubuntu
+  - name: sudo apt-get update;
+    sudo: 'yes'
+    apt:
+      update_cache: 'yes'
+  - name: sudo apt-get dist-upgrade -y;
+    sudo: 'yes'
+    apt:
+      upgrade: dist
+  - name: sudo apt-get install -y python-pip chromium-browser chromium-chromedriver
+    sudo: 'yes'
+    apt:
+      name: '{{ item }}'
+      state: present
+    with_items:
+    - python-pip
+    - chromium-browser
+    - chromium-chromedriver
+  - name: mkdir /media/scraped
+    sudo: 'no'
+    file:
+      path: /media/scraped
+      state: directory
+  - name: chown ubuntu:ubuntu /media/scraped
+    sudo: 'no'
+    file:
+      dest: /media/scraped
+      group: ubuntu
+      owner: ubuntu
+      recurse: 'yes'
+  - name: chown -R ubuntu:ubuntu /media/scraped
+    sudo: 'no'
+    file:
+      dest: /media/scraped
+      group: ubuntu
+      owner: ubuntu
+      recurse: 'yes'
