@@ -9,6 +9,8 @@
   - name: Set default working directory
     set_fact:
       cwd: /home/ubuntu
+  - name: install python-apt
+    raw: apt-get update && apt-get install python-apt -y -q
   - name: sudo apt-get update;
     sudo: 'yes'
     apt:

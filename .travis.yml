@@ -22,7 +22,7 @@ install:
 
 script:
   # Create ansible script.
-  - python ansible-gen.py --input=bash_history.travis
+  #- python ansible-gen.py --input=bash_history.travis
   
   # Execute ansible script
   - ansible-playbook  ansible.yml
