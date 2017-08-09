@@ -18,7 +18,7 @@ before_install:
 
 install:
   # Install Ansible.
-  - pip install ansible==$ANSIBLE_VERSION
+  - pip install ansible
 
 script:
   # Create ansible script.
