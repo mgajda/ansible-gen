@@ -1,7 +1,6 @@
 ---
 - name: Bash converted playbook
-  connection: localhost
-  hosts: localhost
+  hosts: ec2
   remote_user: ubuntu
   environment:
     PWD: /home/ubuntu
