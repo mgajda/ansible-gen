@@ -1,0 +1,29 @@
+---
+sudo: required
+dist: trusty
+
+language: python
+python: "2.7"
+
+env:
+  - ANSIBLE_VERSION=2.2.1.0
+
+branches:
+  only:
+    - master
+
+before_install:
+  - sudo apt-get update -qq
+
+install:
+  # Install Ansible.
+  - pip install ansible==$ANSIBLE_VERSION
+
+script:
+  # Create ansible script.
+  - python ansible-gen.py --input=bash_history
+  
+  # Execute ansible script
+  - ansible-playbook  ansible.yml
+
+

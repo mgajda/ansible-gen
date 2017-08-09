@@ -40,11 +40,16 @@ class UnsortableOrderedDict(OrderedDict):
 yaml.add_representer(UnsortableOrderedDict, yaml.representer.SafeRepresenter.represent_dict)
 
 # Start creating first play in yml
-#header=[UnsortableOrderedDict({'name': 'Bash converted playbook', \
-#	'hosts': HOST,'remote_user': REMOTE_USER, 'environment': {'PWD':'/home/ubuntu'}})]
-header=[UnsortableOrderedDict([ ('name', 'Bash converted playbook'), \
-	('hosts', HOST), ('remote_user', REMOTE_USER), ('environment', {'PWD':'/home/ubuntu'}) ])]
-header[0]['tasks'] = [{'name':'Set default working directory','set_fact':{'cwd': HOME_DIRECTORY}}]  # Initially set current working directory as home directory
+# for testing with travis CI
+header=[UnsortableOrderedDict([ ('name', 'Bash converted playbook'), ('connection', 'localhost'), \
+	('hosts', 'localhost'), ('remote_user', REMOTE_USER), ('environment', {'PWD':'/home/ubuntu'}) ])]
+
+# original header
+#header=[UnsortableOrderedDict([ ('name', 'Bash converted playbook'), \
+#	('hosts', HOST), ('remote_user', REMOTE_USER), ('environment', {'PWD':'/home/ubuntu'}) ])]
+
+# Initially set current working directory as home directory
+header[0]['tasks'] = [{'name':'Set default working directory','set_fact':{'cwd': HOME_DIRECTORY}}]
 
 # Read the bash history file
 i=0
@@ -129,7 +134,7 @@ with open(name,'r') as f:
 			elif 'cd' in cmd_arr: # I am using fact variable to keep track of current working directory
 				command_line=" ".join(cmd_arr)
 				#new_task=UnsortableOrderedDict({'name':command_line,'set_fact':{'cwd': cmd_arr[1]}})	
-				new_task=UnsortableOrderedDict([ ('name',command_line),('set_fact',{'cwd': cmd_arr[1]}) ])	
+				new_task=UnsortableOrderedDict([ ('name',command_line),('set_fact',{'cwd': '{{ cwd }}/'+cmd_arr[1]}) ])	
 				header[0]['tasks'].append(new_task)
 
 			elif 'chown' in cmd_arr:
