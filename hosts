@@ -1,2 +1,2 @@
 [aws]
-ec2 ansible_ssh_host=34.249.50.110
+ec2 ansible_ssh_host=
