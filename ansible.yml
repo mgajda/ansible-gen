@@ -1,6 +1,7 @@
 ---
 - name: Bash converted playbook
-  hosts: ec2
+  connection: localhost
+  hosts: localhost
   remote_user: ubuntu
   environment:
     PWD: /home/ubuntu
@@ -30,17 +31,3 @@
     file:
       path: /media/scraped
       state: directory
-  - name: chown ubuntu:ubuntu /media/scraped
-    sudo: 'no'
-    file:
-      dest: /media/scraped
-      group: ubuntu
-      owner: ubuntu
-      recurse: 'yes'
-  - name: chown -R ubuntu:ubuntu /media/scraped
-    sudo: 'no'
-    file:
-      dest: /media/scraped
-      group: ubuntu
-      owner: ubuntu
-      recurse: 'yes'
