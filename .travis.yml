@@ -8,6 +8,7 @@ before_install:
   # Fetch base image and build new container
   - sudo docker pull ubuntu:14.04
   - sudo docker build --rm=true --tag=ansiblepoc .
+  - pip install pyyaml
 
 script:
   # Run container in detached state
