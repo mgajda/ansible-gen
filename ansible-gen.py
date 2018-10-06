@@ -113,10 +113,7 @@ with open(iname, 'r+') as f:
 			sudo = 'no'
 			if not cmd_arr:
 				print("Comment line. Ignoring")
-
-			# Handling Error preprocessing
-			#print(next(ifile, '').strip())
-
+			
 			# Start handling following commands
 			#if 'apt-get' in cmd_arr:
 			elif 'apt-get' in cmd_arr:
