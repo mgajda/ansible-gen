@@ -29,11 +29,19 @@ parser.add_option('-b', '--base-image',
                   default="ubuntu:14.04",
                   help="base image name, default is ubuntu:14.04")
 
-parser.add_option('-t', '--build-type',
-                  action="store",
-                  dest="build_type",
-                  default="ansible",
-                  help="built type ansible or docker, default is ansible")
+parser.add_option('--ansible', 
+                  action="store_const",
+                  const='ansible',
+                  dest='build_type',
+                  default='ansible',
+                  help="Create ansible yml")
+
+parser.add_option('--docker',
+                  action='store_const',
+                  const='docker',
+                  dest='build_type',
+                  help="Create Dockerfile")
+
 
 options, args = parser.parse_args()
 
@@ -86,8 +94,16 @@ else:
 
 # Read the bash history file
 line_num = 0
-with open(iname, 'r') as f:
-	for line in f:
+with open(iname, 'r+') as f:
+	lines = f.readlines()
+	for i in range(0, len(lines)):
+		line_num += 1
+		line = lines[i]
+		# This will ignore lines followed by # Error
+ 		if i+1 < len(lines):
+			ne = lines[i + 1] 
+			if (ne.startswith( '# Error' )):
+				continue
 		line_num += 1
 		if not line.strip():
 			print("We got empty line.")
@@ -97,6 +113,9 @@ with open(iname, 'r') as f:
 			sudo = 'no'
 			if not cmd_arr:
 				print("Comment line. Ignoring")
+
+			# Handling Error preprocessing
+			#print(next(ifile, '').strip())
 
 			# Start handling following commands
 			#if 'apt-get' in cmd_arr:
