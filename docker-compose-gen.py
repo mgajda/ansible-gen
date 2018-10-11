@@ -10,12 +10,11 @@ import yaml
 import docker
 
 client = docker.from_env()
-#container = client.containers.get('3860f5b3993b')
 containers = client.containers.list()
 template = {'services': {}, 'version': '3'}
 for c in containers:
 	service = {}
-
+	
 	# image info
 	image = c.attrs['Config']['Image']
 	tag = c.attrs['Config']['Labels']
@@ -25,11 +24,16 @@ for c in containers:
 		service['image'] = (str(image))
 
 	# mount volume info
-	dest_volume = c.attrs['Mounts'][0]['Destination']
-	source_volume = c.attrs['Mounts'][0]['Source']
-	service['volumes'] = [str(source_volume) + ":" + str(dest_volume)]
+	# TODO: multiple mounts
+	if len(c.attrs['Mounts']):
+		dest_volume = c.attrs['Mounts'][0]['Destination']
+		source_volume = c.attrs['Mounts'][0]['Source']
+		service['volumes'] = [str(source_volume) + ":" + str(dest_volume)]
 
 	# port mapping info ( handle tcp port only yet)
+	# default port will be zero, if some container working as client, 
+	# and didn't host any service, then we didn't need port 
+	innerport = '0' 	
 	urls = c.attrs['NetworkSettings']['Ports']
 	for url in urls:
 		innerport = url.split('/')[0]
@@ -38,6 +42,8 @@ for c in containers:
 			service['ports'] = [str(innerport)+':'+str(outerport)]
 
 	# service name info
+	# default service name is same as image name, if netstat is not present in container
+	service_name = str(image)
 	netstat_output=c.exec_run("netstat -tulpn").output
 	for row in netstat_output.split('\n'):
 		if innerport in row:
