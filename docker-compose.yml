@@ -1,0 +1,6 @@
+services:
+  hashicorp/http-echo:
+    image: hashicorp/http-echo
+    ports:
+    - 8080:8080
+version: '3'
