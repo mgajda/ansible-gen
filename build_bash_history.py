@@ -29,10 +29,10 @@ class UnsortableOrderedDict(OrderedDict):
 	def items(self, *args, **kwargs):
         	return UnsortableList(OrderedDict.items(self, *args, **kwargs))
 
-def append_to_dockerfile(command):
+def append_to_dockerfile(comment, command):
 	"""Append command to Dockerfile"""
 	with open("Dockerfile", "a") as docker:
-		docker.write(command + '\n')
+		docker.write('#' + comment + '\n'  + command + '\n\n')
 
 def build_from_bash_history(btype, iname, bimage):
 	if btype == 'ansible':
@@ -53,8 +53,9 @@ def build_from_bash_history(btype, iname, bimage):
 	elif btype == 'docker':
 		if os.path.exists('Dockerfile'):
     			os.remove('Dockerfile')
+		# Adding base image
 		cmd = 'FROM ' + bimage
-		append_to_dockerfile(cmd)	
+		append_to_dockerfile('Base image', cmd)	
 
 	else:
 		print("Other build type Pending")
@@ -125,7 +126,7 @@ def build_from_bash_history(btype, iname, bimage):
 						if 'sudo' in cmd_arr: 
 							cmd_arr.remove('sudo')
 						cmd = 'RUN ' + " ".join(cmd_arr)
-						append_to_dockerfile(cmd)	
+						append_to_dockerfile('Installing/Update packages', cmd)	
 	
 				elif 'pip' in cmd_arr:
 					if btype == 'ansible':
@@ -144,7 +145,7 @@ def build_from_bash_history(btype, iname, bimage):
 						if 'sudo' in cmd_arr: 
 							cmd_arr.remove('sudo')
 						cmd = 'RUN ' + " ".join(cmd_arr)
-						append_to_dockerfile(cmd)	
+						append_to_dockerfile('Installing python packages', cmd)	
 
 				elif 'export' in cmd_arr:
 					if btype == 'ansible':
@@ -154,7 +155,7 @@ def build_from_bash_history(btype, iname, bimage):
 					elif btype == 'docker':
 						# export convert into ENV
 						cmd = 'ENV ' + cmd_arr[1] 
-						append_to_dockerfile(cmd)	
+						append_to_dockerfile('Setting env vars', cmd)	
 
 				elif 'echo' in cmd_arr:
 					if btype == 'ansible':
@@ -168,7 +169,7 @@ def build_from_bash_history(btype, iname, bimage):
 						header[0]['tasks'].append(new_task)
 					elif btype == 'docker':
 						cmd = '# ' + " ".join(cmd_arr)
-						append_to_dockerfile(cmd)	
+						append_to_dockerfile(' ', cmd)	
 					
 
 				elif 'cd' in cmd_arr: # I am using fact variable to keep track of current working directory
@@ -179,7 +180,7 @@ def build_from_bash_history(btype, iname, bimage):
 						header[0]['tasks'].append(new_task)
 					elif btype == 'docker':
 						cmd = 'WORKDIR ' + (cmd_arr[1])
-						append_to_dockerfile(cmd)	
+						append_to_dockerfile('Change directory', cmd)	
 
 				elif 'chown' in cmd_arr:
 					if btype == 'ansible':
@@ -197,7 +198,7 @@ def build_from_bash_history(btype, iname, bimage):
 						header[0]['tasks'].append(new_task)
 					elif btype == 'docker':
 						cmd = '# chown remain in effect on mounted volume '
-						append_to_dockerfile(cmd)	
+						append_to_dockerfile('Change ownership', cmd)	
 
 				elif 'mkdir' in cmd_arr:
 					if btype == 'ansible':
@@ -215,7 +216,7 @@ def build_from_bash_history(btype, iname, bimage):
 							header[0]['tasks'].append(new_task)
 					elif btype == 'docker':
 						cmd = 'RUN ' + " ".join(cmd_arr)
-						append_to_dockerfile(cmd)	
+						append_to_dockerfile('Creating directory', cmd)	
  
 				elif 'mount' in cmd_arr:
 					if btype == 'ansible':
@@ -228,7 +229,7 @@ def build_from_bash_history(btype, iname, bimage):
 						header[0]['tasks'].append(new_task)
 					elif btype == 'docker':
 						cmd = 'VOLUME ["' + cmd_arr[1] + '"]'
-						append_to_dockerfile(cmd)	
+						append_to_dockerfile('Mounting volume, will also handle in compose file', cmd)	
 
 				elif 'git' in cmd_arr:
 					if btype == 'ansible':
@@ -242,7 +243,7 @@ def build_from_bash_history(btype, iname, bimage):
 						header[0]['tasks'].append(new_task)
 					elif btype == 'docker':
 						cmd = 'RUN ' + " ".join(cmd_arr)
-						append_to_dockerfile(cmd)	
+						append_to_dockerfile('Git repo clone', cmd)	
 
 				elif 'rm' in cmd_arr:
 					if btype == 'ansible':
@@ -264,7 +265,7 @@ def build_from_bash_history(btype, iname, bimage):
 						# currently only handle relative path, will create case of absolute path if needed
 					elif btype == 'docker':
 						cmd = 'RUN ' + " ".join(cmd_arr)
-						append_to_dockerfile(cmd)	
+						append_to_dockerfile('Removing dir', cmd)	
 	
 				elif 'docker' in cmd_arr:
 					if btype == 'ansible':
@@ -310,7 +311,7 @@ def build_from_bash_history(btype, iname, bimage):
 							header[0]['tasks'].append(new_task)
 					elif btype == 'docker':
 						cmd = '# docker command not possible inside docker'
-						append_to_dockerfile(cmd)	
+						append_to_dockerfile('docker execute', cmd)	
 					
 				elif 'npm' in cmd_arr:
 					if btype == 'ansible':
@@ -331,7 +332,7 @@ def build_from_bash_history(btype, iname, bimage):
 						header[0]['tasks'].append(new_task)
 					elif btype == 'docker':
 						cmd = '# npm pending'
-						append_to_dockerfile(cmd)	
+						append_to_dockerfile('npm operation', cmd)	
 
 				elif 'bower' in cmd_arr:
 					if btype == 'ansible':
@@ -343,7 +344,7 @@ def build_from_bash_history(btype, iname, bimage):
 						header[0]['tasks'].append(new_task)
 					elif btype == 'docker':
 						cmd = '# bower pending'
-						append_to_dockerfile(cmd)	
+						append_to_dockerfile('bower execute', cmd)	
 			
 				elif 'scp' in cmd_arr:
 					if btype == 'ansible':
@@ -390,7 +391,7 @@ def build_from_bash_history(btype, iname, bimage):
 					elif btype == 'docker':
 						# scp convert into COPY
 						cmd = 'COPY ' + cmd_arr[1]  + ' ' + cmd_arr[2].split(":")[1]
-						append_to_dockerfile(cmd)
+						append_to_dockerfile('Copying files from host', cmd)
 				else:
 					if 'sudo' in cmd_arr: cmd_arr.remove('sudo')
 					print("Command "+ cmd_arr[0]+" not implemented or not found. Line no " + str(line_num))
