@@ -8,6 +8,7 @@ Note: link containers not supported yet!
 
 import yaml
 import docker
+import subprocess
 
 def build_from_running_containers():
 	client = docker.from_env()
@@ -45,7 +46,10 @@ def build_from_running_containers():
 		# service name info
 		# default service name is same as image name, if netstat is not present in container
 		service_name = str(image)
-		netstat_output=c.exec_run("netstat -tulpn").output
+		pid=c.attrs['State']['Pid']
+		netstat_command=['sudo', 'nsenter', '-t', str(pid), '-n', 'netstat', '-tulpn']
+		netstat_output=subprocess.check_output(netstat_command)
+		#netstat_output=c.exec_run("netstat -tulpn").output
 		for row in netstat_output.split('\n'):
 			if innerport in row:
 				if row.split()[0] == 'tcp':
