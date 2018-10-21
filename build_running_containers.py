@@ -10,9 +10,13 @@ import yaml
 import docker
 import subprocess
 
-def build_from_running_containers():
+def build_from_running_containers(ids=None):
 	client = docker.from_env()
-	containers = client.containers.list()
+	if ids==None:
+		containers = client.containers.list()
+	else:
+		# containers from given ids
+		containers = client.containers.list(filters={'status': 'running', 'id': ids})
 	template = {'services': {}, 'version': '3'}
 	for c in containers:
 		service = {}
@@ -48,12 +52,12 @@ def build_from_running_containers():
 		service_name = str(image)
 		pid=c.attrs['State']['Pid']
 		netstat_command=['sudo', 'nsenter', '-t', str(pid), '-n', 'netstat', '-tulpn']
-		netstat_output=subprocess.check_output(netstat_command)
+		#netstat_output=subprocess.check_output(netstat_command)
 		#netstat_output=c.exec_run("netstat -tulpn").output
-		for row in netstat_output.split('\n'):
-			if innerport in row:
-				if row.split()[0] == 'tcp':
-					service_name = row.split()[6].split('/')[1]
+		#for row in netstat_output.split('\n'):
+		#	if innerport in row:
+		#		if row.split()[0] == 'tcp':
+		#			service_name = row.split()[6].split('/')[1]
 
 		# append service
 		template['services'][service_name] = service

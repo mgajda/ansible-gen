@@ -9,6 +9,9 @@ import optparse
 from build_bash_history import build_from_bash_history
 from build_running_containers import build_from_running_containers 
 
+def docker_args_callback(option, opt, value, parser):
+  setattr(parser.values, option.dest, value.split(','))
+
 def main():
 	parser = optparse.OptionParser()
 	
@@ -37,17 +40,22 @@ def main():
                   dest='build_type',
                   help="Create Dockerfile")
 
+	parser.add_option('--docker-id',
+                  type='string',
+                  action='callback',
+                  callback=docker_args_callback,
+		  dest = 'docker_args_list')
 
 	options, args = parser.parse_args()
 
 	btype = options.build_type
 	iname = options.input_bash
 	bimage = options.base_image
+	container_list = options.docker_args_list
 
-	
 	build_from_bash_history(btype, iname, bimage)
 	if btype == 'docker':
-		build_from_running_containers()
+		build_from_running_containers(container_list)
 
 	# future steps..
 
