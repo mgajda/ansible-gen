@@ -52,12 +52,11 @@ def build_from_running_containers(ids=None):
 		service_name = str(image)
 		pid=c.attrs['State']['Pid']
 		netstat_command=['sudo', 'nsenter', '-t', str(pid), '-n', 'netstat', '-tulpn']
-		#netstat_output=subprocess.check_output(netstat_command)
-		#netstat_output=c.exec_run("netstat -tulpn").output
-		#for row in netstat_output.split('\n'):
-		#	if innerport in row:
-		#		if row.split()[0] == 'tcp':
-		#			service_name = row.split()[6].split('/')[1]
+		netstat_output=subprocess.check_output(netstat_command)
+		for row in netstat_output.split('\n'):
+			if innerport in row:
+				if row.split()[0] == 'tcp':
+					service_name = row.split()[6].split('/')[1]
 
 		# append service
 		template['services'][service_name] = service
