@@ -81,320 +81,235 @@ def build_from_bash_history(btype, iname, bimage):
 				sudo = 'no'
 				if not cmd_arr:
 					print("Comment line. Ignoring")
-			
+					continue
+
+				if 'sudo' in cmd_arr: 
+					cmd_arr.remove('sudo')
+					sudo = 'yes'
+				ansible_skip = 0	
 				# Start handling following commands
-				#if 'apt-get' in cmd_arr:
-				elif 'apt-get' in cmd_arr:
-					if btype == 'ansible':
-						if 'install' in cmd_arr:
-							command_line = " ".join(cmd_arr)
-							if 'sudo' in cmd_arr: 
-								cmd_arr.remove('sudo')
-								sudo = 'yes'
-							if '-y' in cmd_arr: cmd_arr.remove('-y')
-							if 'apt-get' in cmd_arr: cmd_arr.remove('apt-get')
-							if 'install' in cmd_arr: cmd_arr.remove('install')
-							#new_task = UnsortableOrderedDict({'name':command_line, 'sudo':sudo, \
-							#		'apt':{'name':'{{ item }}','state':'present'}})
-							new_task = UnsortableOrderedDict([('name', command_line), ('sudo', sudo), \
-								('apt', {'name':'{{ item }}', 'state':'present'})])
-							packages = []
-							for package in cmd_arr: # Here we have list of packages to be install
-								packages.append(package)
-							new_task['with_items'] = packages
-							header[0]['tasks'].append(new_task)
-						elif 'update;' in cmd_arr:
-							command_line = " ".join(cmd_arr)
-							if 'sudo' in cmd_arr: 
-								cmd_arr.remove('sudo')
-								sudo = 'yes'
-							#new_task = UnsortableOrderedDict({'name':command_line,'sudo':sudo,'apt':{'update_cache':'yes'}})
-							new_task = UnsortableOrderedDict([('name', command_line), ('sudo', sudo), ('apt', {'update_cache':'yes'})])
-							header[0]['tasks'].append(new_task)
-						elif 'dist-upgrade' in cmd_arr:
-							command_line = " ".join(cmd_arr)
-							if 'sudo' in cmd_arr: 
-								cmd_arr.remove('sudo')
-								sudo = 'yes'
-							#new_task = UnsortableOrderedDict({'name':command_line,'sudo':sudo,'apt':{'upgrade':'dist'}})
-							new_task = UnsortableOrderedDict([('name', command_line), ('sudo', sudo), ('apt', {'upgrade':'dist'})])
-							header[0]['tasks'].append(new_task)
-						else:
-							print("apt-get argument not supported")
-					elif btype == 'docker':
-						# apt-get convert into RUN
-						if 'sudo' in cmd_arr: 
-							cmd_arr.remove('sudo')
-						cmd = 'RUN ' + " ".join(cmd_arr)
-						append_to_dockerfile('Installing/Update packages', cmd)	
+				if 'apt-get' in cmd_arr:
+					if 'install' in cmd_arr:
+						command_line = " ".join(cmd_arr)
+						if '-y' in cmd_arr: cmd_arr.remove('-y')
+						if 'apt-get' in cmd_arr: cmd_arr.remove('apt-get')
+						if 'install' in cmd_arr: cmd_arr.remove('install')
+						new_task = UnsortableOrderedDict([('name', command_line), ('sudo', sudo), \
+							('apt', {'name':'{{ item }}', 'state':'present'})])
+						packages = []
+						for package in cmd_arr: # Here we have list of packages to be install
+							packages.append(package)
+						new_task['with_items'] = packages
+					elif 'update;' in cmd_arr:
+						command_line = " ".join(cmd_arr)
+						new_task = UnsortableOrderedDict([('name', command_line), ('sudo', sudo), ('apt', {'update_cache':'yes'})])
+					elif 'dist-upgrade' in cmd_arr:
+						command_line = " ".join(cmd_arr)
+						new_task = UnsortableOrderedDict([('name', command_line), ('sudo', sudo), ('apt', {'upgrade':'dist'})])
+					else:
+						print("apt-get argument not supported")
+					# apt-get convert into RUN
+					docker_cmd = 'RUN ' + " ".join(cmd_arr)
+					docker_comments = 'Installing/Update packages'	
 	
 				elif 'pip' in cmd_arr:
-					if btype == 'ansible':
-						command_line = " ".join(cmd_arr)
-						if 'sudo' in cmd_arr: 
-							cmd_arr.remove('sudo')
-							sudo = 'yes'
-						if '-r' in cmd_arr:
-							cmd_arr.remove('-r')
-							#new_task = UnsortableOrderedDict({'name':command_line,'sudo':sudo,'pip': {'requirements': '{{ cwd }}/requirment.txt'}})
-							new_task = UnsortableOrderedDict([('name', command_line), ('sudo', sudo), ('pip', {'requirements': '{{ cwd }}/requirment.txt'})])
-							header[0]['tasks'].append(new_task)
+					command_line = " ".join(cmd_arr)
+					if '-r' in cmd_arr:
+						cmd_arr.remove('-r')
+						new_task = UnsortableOrderedDict([('name', command_line), ('sudo', sudo), ('pip', {'requirements': '{{ cwd }}/requirment.txt'})])
 						#elif (pakcages list in argument -> case need to implement )
-					elif btype == 'docker':
-						# pip convert into RUN
-						if 'sudo' in cmd_arr: 
-							cmd_arr.remove('sudo')
-						cmd = 'RUN ' + " ".join(cmd_arr)
-						append_to_dockerfile('Installing python packages', cmd)	
+					# pip convert into RUN
+					docker_cmd = 'RUN ' + " ".join(cmd_arr)
+					docker_comments = 'Installing python packages'
 
 				elif 'export' in cmd_arr:
-					if btype == 'ansible':
-						# need to handle enviroment vairable, either using ansible environment or using ~/.bashrc
-						# currently thinking on it
-						print(cmd_arr[1])
-					elif btype == 'docker':
-						# export convert into ENV
-						cmd = 'ENV ' + cmd_arr[1] 
-						append_to_dockerfile('Setting env vars', cmd)	
+					# need to handle enviroment vairable, either using ansible environment or using ~/.bashrc
+					# currently thinking on it
+					print(cmd_arr[1])
+					# export convert into ENV
+					docker_cmd = 'ENV ' + cmd_arr[1] 
+					docker_comments = 'Setting env vars'
 
 				elif 'echo' in cmd_arr:
-					if btype == 'ansible':
-						command_line = " ".join(cmd_arr)
-						if 'sudo' in cmd_arr: 
-							cmd_arr.remove('sudo')
-							sudo = 'yes'
-						echo_line = " ".join(cmd_arr)
-						#new_task=UnsortableOrderedDict({'name':command_line,'sudo':sudo,'shell': echo_line })
-						new_task = UnsortableOrderedDict([('name', command_line), ('sudo', sudo), ('shell', echo_line)])
-						header[0]['tasks'].append(new_task)
-					elif btype == 'docker':
-						cmd = '# ' + " ".join(cmd_arr)
-						append_to_dockerfile(' ', cmd)	
+					command_line = " ".join(cmd_arr)
+					echo_line = " ".join(cmd_arr)
+					new_task = UnsortableOrderedDict([('name', command_line), ('sudo', sudo), ('shell', echo_line)])
+					docker_cmd = '# ' + " ".join(cmd_arr)
+					docker_comments = ' '
 					
 
 				elif 'cd' in cmd_arr: # I am using fact variable to keep track of current working directory
-					if btype == 'ansible':
-						command_line = " ".join(cmd_arr)
-						#new_task=UnsortableOrderedDict({'name':command_line,'set_fact':{'cwd': cmd_arr[1]}})	
-						new_task = UnsortableOrderedDict([('name', command_line), ('set_fact', {'cwd': '{{ cwd }}/'+cmd_arr[1]})])	
-						header[0]['tasks'].append(new_task)
-					elif btype == 'docker':
-						cmd = 'WORKDIR ' + (cmd_arr[1])
-						append_to_dockerfile('Change directory', cmd)	
+					command_line = " ".join(cmd_arr)
+					new_task = UnsortableOrderedDict([('name', command_line), ('set_fact', {'cwd': '{{ cwd }}/'+cmd_arr[1]})])	
+					docker_cmd = 'WORKDIR ' + (cmd_arr[1])
+					docker_comments = 'Change directory'
 
 				elif 'chown' in cmd_arr:
-					if btype == 'ansible':
-						command_line = " ".join(cmd_arr)
-						if 'sudo' in cmd_arr: 
-							cmd_arr.remove('sudo')
-							sudo = 'yes'
-						if '-R' in cmd_arr: cmd_arr.remove('-R')
-						user = cmd_arr[1].split(':')[0]
-						group = cmd_arr[1].split(':')[1]
-						#new_task=UnsortableOrderedDict({'name':command_line, 'sudo': sudo, \
-						#	'file':{'dest':cmd_arr[2],'owner':user,'group':group,'recurse':'yes'}})
-						new_task = UnsortableOrderedDict([('name', command_line), ('sudo', sudo), \
-						('file', {'dest':cmd_arr[2], 'owner':user, 'group':group, 'recurse':'yes'})])
-						header[0]['tasks'].append(new_task)
-					elif btype == 'docker':
-						cmd = '# chown remain in effect on mounted volume '
-						append_to_dockerfile('Change ownership', cmd)	
+					command_line = " ".join(cmd_arr)
+					if '-R' in cmd_arr: cmd_arr.remove('-R')
+					user = cmd_arr[1].split(':')[0]
+					group = cmd_arr[1].split(':')[1]
+					new_task = UnsortableOrderedDict([('name', command_line), ('sudo', sudo), \
+					('file', {'dest':cmd_arr[2], 'owner':user, 'group':group, 'recurse':'yes'})])
+					docker_cmd = '# chown remain in effect on mounted volume '
+					docker_comments = 'Change ownership'
 
 				elif 'mkdir' in cmd_arr:
-					if btype == 'ansible':
-						command_line = " ".join(cmd_arr)
-						if 'sudo' in cmd_arr: 
-							cmd_arr.remove('sudo')
-							sudo = 'yes'
-						if 'mkdir' in cmd_arr: cmd_arr.remove('mkdir')
-						if '-p' in cmd_arr: cmd_arr.remove('-p') # May be we have -p option
-						for item in cmd_arr: # Here we have list of directories to be created
-							#new_task=UnsortableOrderedDict({'name':command_line,'sudo':sudo, \
-							#	'file': {'path': item, 'state':'directory'}})
-							new_task = UnsortableOrderedDict([('name', command_line), ('sudo', sudo), \
-							('file', {'path': item, 'state':'directory'})])
-							header[0]['tasks'].append(new_task)
-					elif btype == 'docker':
-						cmd = 'RUN ' + " ".join(cmd_arr)
-						append_to_dockerfile('Creating directory', cmd)	
+					command_line = " ".join(cmd_arr)
+					if 'mkdir' in cmd_arr: cmd_arr.remove('mkdir')
+					if '-p' in cmd_arr: cmd_arr.remove('-p') # May be we have -p option
+					ansible_skip = 1
+					for item in cmd_arr: # Here we have list of directories to be created
+						new_task = UnsortableOrderedDict([('name', command_line), ('sudo', sudo), \
+						('file', {'path': item, 'state':'directory'})])
+						header[0]['tasks'].append(new_task)
+					docker_cmd = 'RUN ' + " ".join(cmd_arr)
+					docker_comments = 'Creating directory'
  
 				elif 'mount' in cmd_arr:
-					if btype == 'ansible':
-						command_line = " ".join(cmd_arr)
-						if 'sudo' in cmd_arr: 
-							cmd_arr.remove('sudo')
-							sudo = 'yes'
-						new_task = UnsortableOrderedDict([('name', command_line), ('sudo', sudo), ('mount', {'path': cmd_arr[1]})])
-						#new_task = UnsortableOrderedDict({'name':command_line, 'sudo':sudo, 'mount': {'path': cmd_arr[1]}})
-						header[0]['tasks'].append(new_task)
-					elif btype == 'docker':
-						cmd = 'VOLUME ["' + cmd_arr[1] + '"]'
-						append_to_dockerfile('Mounting volume, will also handle in compose file', cmd)	
+					command_line = " ".join(cmd_arr)
+					new_task = UnsortableOrderedDict([('name', command_line), ('sudo', sudo), ('mount', {'path': cmd_arr[1]})])
+					docker_cmd = 'VOLUME ["' + cmd_arr[1] + '"]'
+					docker_comments = 'Mounting volume, will also handle in compose file'
 
 				elif 'git' in cmd_arr:
-					if btype == 'ansible':
-						command_line = " ".join(cmd_arr)
-						if 'sudo' in cmd_arr: 
-							cmd_arr.remove('sudo')
-							sudo = 'yes'
-						git_line = " ".join(cmd_arr)
-						#new_task = UnsortableOrderedDict({'name':command_line,'sudo':sudo, 'shell': 'cd {{ cwd }} && '+ git_line})
-						new_task = UnsortableOrderedDict([('name', command_line), ('sudo', sudo), ('shell', 'cd {{ cwd }} && '+ git_line)])
-						header[0]['tasks'].append(new_task)
-					elif btype == 'docker':
-						cmd = 'RUN ' + " ".join(cmd_arr)
-						append_to_dockerfile('Git repo clone', cmd)	
+					command_line = " ".join(cmd_arr)
+					git_line = " ".join(cmd_arr)
+					new_task = UnsortableOrderedDict([('name', command_line), ('sudo', sudo), ('shell', 'cd {{ cwd }} && '+ git_line)])
+					docker_cmd = 'RUN ' + " ".join(cmd_arr)
+					docker_comments = 'Git repo clone'
 
 				elif 'rm' in cmd_arr:
-					if btype == 'ansible':
-						command_line = " ".join(cmd_arr)
-						if 'sudo' in cmd_arr: 
-							cmd_arr.remove('sudo')
-							sudo = 'yes'
-						if 'rm' in cmd_arr: cmd_arr.remove('rm')
-						if '-rf' in cmd_arr: cmd_arr.remove('-rf')
-						#new_task = UnsortableOrderedDict({'name':command_line, 'sudo':sudo, \
-						#			'file':{'path':'{{ item }}','state':'absent'}})
-						new_task = UnsortableOrderedDict([('name', command_line), ('sudo', sudo), \
-								('file', {'path':'{{ item }}', 'state':'absent'})])
-						dirs = []
-						for item in cmd_arr: # Here we have list of directories to be deleted
-							dirs.append("{{ cwd }}/"+ item)
-						new_task['with_items'] = dirs
-						header[0]['tasks'].append(new_task)
-						# currently only handle relative path, will create case of absolute path if needed
-					elif btype == 'docker':
-						cmd = 'RUN ' + " ".join(cmd_arr)
-						append_to_dockerfile('Removing dir', cmd)	
+					command_line = " ".join(cmd_arr)
+					if 'rm' in cmd_arr: cmd_arr.remove('rm')
+					if '-rf' in cmd_arr: cmd_arr.remove('-rf')
+					new_task = UnsortableOrderedDict([('name', command_line), ('sudo', sudo), \
+							('file', {'path':'{{ item }}', 'state':'absent'})])
+					dirs = []
+					for item in cmd_arr: # Here we have list of directories to be deleted
+						dirs.append("{{ cwd }}/"+ item)
+					new_task['with_items'] = dirs
+					# currently only handle relative path, will create case of absolute path if needed
+
+					docker_cmd = 'RUN ' + " ".join(cmd_arr)
+					docker_comments = 'Removing dir'
 	
 				elif 'docker' in cmd_arr:
-					if btype == 'ansible':
-						command_line = " ".join(cmd_arr)
-						if 'sudo' in cmd_arr: 
-							cmd_arr.remove('sudo')
-							sudo = 'yes'
-						if 'build' in cmd_arr:
-							dockerfile = None
-							durl = None
-							dname = None
-							dtag = None 
-							if 'docker' in cmd_arr: cmd_arr.remove('docker')
-							if 'build' in cmd_arr: cmd_arr.remove('build')
-							it = iter(cmd_arr)
-							for opt in it:
-								if opt == '-f':
-									dockerfile = next(it)
-								elif opt == '-t':
-									durl = next(it)
-									dname = durl.split(":")[0]
-									dtag = durl.split(":")[1]
-								else:
-									print opt
-							new_task = UnsortableOrderedDict([('name', command_line), ('sudo', sudo), ('docker_image', {'dockerfile': dockerfile, 'name': dname, 'tag': dtag, 'path': '{{ cwd }}'})])
-							header[0]['tasks'].append(new_task)
-						if 'run' in cmd_arr:
-							ports = None; inner = None; outer = None
-							if 'docker' in cmd_arr: cmd_arr.remove('docker')
-							if 'run' in cmd_arr: cmd_arr.remove('run')
-							it = iter(cmd_arr)
-							for opt in it:
-								if opt == '-p':
-									ports = next(it)
-									print ports
-									inner = ports.split(":")[0]
-									outer = ports.split(":")[1]
-								elif opt == '-v':
-									volumes = next(it)
-								else:
-									image = opt
-							new_task = UnsortableOrderedDict([('name', command_line), ('sudo', sudo), ('docker', {'image': image, 'state': 'started', 'ports': ([ports])})])
-							header[0]['tasks'].append(new_task)
-					elif btype == 'docker':
-						cmd = '# docker command not possible inside docker'
-						append_to_dockerfile('docker execute', cmd)	
+					command_line = " ".join(cmd_arr)
+					if 'build' in cmd_arr:
+						dockerfile = None
+						durl = None
+						dname = None
+						dtag = None 
+						if 'docker' in cmd_arr: cmd_arr.remove('docker')
+						if 'build' in cmd_arr: cmd_arr.remove('build')
+						it = iter(cmd_arr)
+						for opt in it:
+							if opt == '-f':
+								dockerfile = next(it)
+							elif opt == '-t':
+								durl = next(it)
+								dname = durl.split(":")[0]
+								dtag = durl.split(":")[1]
+							else:
+								print opt
+						new_task = UnsortableOrderedDict([('name', command_line), ('sudo', sudo), ('docker_image', {'dockerfile': dockerfile, 'name': dname, 'tag': dtag, 'path': '{{ cwd }}'})])
+					if 'run' in cmd_arr:
+						ports = None; inner = None; outer = None
+						if 'docker' in cmd_arr: cmd_arr.remove('docker')
+						if 'run' in cmd_arr: cmd_arr.remove('run')
+						it = iter(cmd_arr)
+						for opt in it:
+							if opt == '-p':
+								ports = next(it)
+								print ports
+								inner = ports.split(":")[0]
+								outer = ports.split(":")[1]
+							elif opt == '-v':
+								volumes = next(it)
+							else:
+								image = opt
+						new_task = UnsortableOrderedDict([('name', command_line), ('sudo', sudo), ('docker', {'image': image, 'state': 'started', 'ports': ([ports])})])
+
+					docker_cmd = '# docker command not possible inside docker'
+					docker_comments = 'docker execute'
 					
 				elif 'npm' in cmd_arr:
-					if btype == 'ansible':
-						command_line = " ".join(cmd_arr)
-						global_flag = 'no'
-						if 'sudo' in cmd_arr: 
-							cmd_arr.remove('sudo')
-							sudo = 'yes'
-						cmd_arr.remove('npm')
-						cmd_arr.remove('install')
-						if not cmd_arr: # Must be package.json
-							new_task = UnsortableOrderedDict([('name', command_line), ('sudo', sudo), ('npm', {'path': '{{ cwd }}'})])
-						else:	
-							if '-g' in cmd_arr:
-								cmd_arr.remove('-g')
-								global_flag = 'yes'
-							new_task = UnsortableOrderedDict([('name', command_line), ('sudo', sudo), ('npm', {'name': cmd_arr[0], 'global': global_flag})])
-						header[0]['tasks'].append(new_task)
-					elif btype == 'docker':
-						cmd = '# npm pending'
-						append_to_dockerfile('npm operation', cmd)	
+					command_line = " ".join(cmd_arr)
+					global_flag = 'no'
+					cmd_arr.remove('npm')
+					cmd_arr.remove('install')
+					if not cmd_arr: # Must be package.json
+						new_task = UnsortableOrderedDict([('name', command_line), ('sudo', sudo), ('npm', {'path': '{{ cwd }}'})])
+					else:	
+						if '-g' in cmd_arr:
+							cmd_arr.remove('-g')
+							global_flag = 'yes'
+						new_task = UnsortableOrderedDict([('name', command_line), ('sudo', sudo), ('npm', {'name': cmd_arr[0], 'global': global_flag})])
+
+					docker_cmd = '# npm pending'
+					docker_comments = 'npm operation'
 
 				elif 'bower' in cmd_arr:
-					if btype == 'ansible':
-						command_line = " ".join(cmd_arr)
-						if 'sudo' in cmd_arr: 
-							cmd_arr.remove('sudo')
-							sudo = 'yes'
-						new_task = UnsortableOrderedDict([('name', command_line), ('sudo', sudo), ('bower', {'path':'{{ cwd }}'})])
-						header[0]['tasks'].append(new_task)
-					elif btype == 'docker':
-						cmd = '# bower pending'
-						append_to_dockerfile('bower execute', cmd)	
+					command_line = " ".join(cmd_arr)
+					new_task = UnsortableOrderedDict([('name', command_line), ('sudo', sudo), ('bower', {'path':'{{ cwd }}'})])
+					docker_cmd = '# bower pending'
+					docker_comments = 'bower execute'
 			
 				elif 'scp' in cmd_arr:
-					if btype == 'ansible':
-						command_line = " ".join(cmd_arr)
-						dir_flag = None
-						wildcard = "no"
-						if 'sudo' in cmd_arr: 
-							cmd_arr.remove('sudo')
-							sudo = 'yes'
-						if '-r' in cmd_arr:
-							cmd_arr.remove('-r')
-						if '*' in cmd_arr[1]:
-							wildcard = 'yes'
-							cmd_arr[1] = re.sub('[*]', '', cmd_arr[1])
-						dst_path = cmd_arr[2].split(":")[1]
+					ansible_skip = 1
+					command_line = " ".join(cmd_arr)
+					dir_flag = None
+					wildcard = "no"
+					if 'sudo' in cmd_arr: 
+						cmd_arr.remove('sudo')
+						sudo = 'yes'
+					if '-r' in cmd_arr:
+						cmd_arr.remove('-r')
+					if '*' in cmd_arr[1]:
+						wildcard = 'yes'
+						cmd_arr[1] = re.sub('[*]', '', cmd_arr[1])
+					dst_path = cmd_arr[2].split(":")[1]
+					print dst_path
+					if dst_path is "":
 						print dst_path
-						if dst_path is "":
-							print dst_path
-							dst = '{{ cwd }}'
-						elif dst_path[0] is '/':
-							# absolute path
-							dst = dst_path
-						else:
-							# relative path
-							dst = '{{ cwd }}/'+dst_path
-						if wildcard == 'no':
-							new_task = UnsortableOrderedDict([('name', command_line), ('sudo', sudo), \
-								('copy', {'src': cmd_arr[1] \
-								, 'dest': dst})]) 
-							header[0]['tasks'].append(new_task)
-						else:
-							src_loc = cmd_arr[1].rsplit('/', 1)
-							# wild card case
-							new_task = UnsortableOrderedDict([('name',command_line), ('sudo',sudo), \
-							#('local_action','shell ls '+cmd_arr[1]+'| awk -F "/" \'{print $NF}\''), \
-							('local_action', 'shell ls '+cmd_arr[1]), \
-							('register', 'key_file')])
-							header[0]['tasks'].append(new_task)
-							new_task = UnsortableOrderedDict([ \
-							('copy', {'src': ''+src_loc[0]+'/{{ item }}', \
-							'dest': dst+'/{{ item }}'}), 
-							('with_items', "{{ key_file.stdout_lines }}")])
-							header[0]['tasks'].append(new_task)
-					elif btype == 'docker':
-						# scp convert into COPY
-						cmd = 'COPY ' + cmd_arr[1]  + ' ' + cmd_arr[2].split(":")[1]
-						append_to_dockerfile('Copying files from host', cmd)
+						dst = '{{ cwd }}'
+					elif dst_path[0] is '/':
+						# absolute path
+						dst = dst_path
+					else:
+						# relative path
+						dst = '{{ cwd }}/'+dst_path
+					if wildcard == 'no':
+						new_task = UnsortableOrderedDict([('name', command_line), ('sudo', sudo), \
+							('copy', {'src': cmd_arr[1] \
+							, 'dest': dst})]) 
+						header[0]['tasks'].append(new_task)
+					else:
+						src_loc = cmd_arr[1].rsplit('/', 1)
+						# wild card case
+						new_task = UnsortableOrderedDict([('name',command_line), ('sudo',sudo), \
+						#('local_action','shell ls '+cmd_arr[1]+'| awk -F "/" \'{print $NF}\''), \
+						('local_action', 'shell ls '+cmd_arr[1]), \
+						('register', 'key_file')])
+						header[0]['tasks'].append(new_task)
+						new_task = UnsortableOrderedDict([ \
+						('copy', {'src': ''+src_loc[0]+'/{{ item }}', \
+						'dest': dst+'/{{ item }}'}), 
+						('with_items', "{{ key_file.stdout_lines }}")])
+						header[0]['tasks'].append(new_task)
+					# scp convert into COPY
+					docker_cmd = 'COPY ' + cmd_arr[1]  + ' ' + cmd_arr[2].split(":")[1]
+					docker_comments = 'Copying files from host'
 				else:
-					if 'sudo' in cmd_arr: cmd_arr.remove('sudo')
 					print("Command "+ cmd_arr[0]+" not implemented or not found. Line no " + str(line_num))
+					continue;
+				
+				if btype == 'ansible':
+					if ansible_skip == 0:
+						header[0]['tasks'].append(new_task)
+				elif btype == 'docker':
+					append_to_dockerfile(docker_comments, docker_cmd)
 	
 	# Generate yml file read by ansible
 	if btype == 'ansible':

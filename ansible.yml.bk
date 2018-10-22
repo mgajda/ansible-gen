@@ -13,13 +13,10 @@
     sudo: 'no'
     local_action: shell ls ansible/
     register: key_file
-  - &id001
-    copy:
+  - copy:
       dest: '{{ cwd }}/.ssh//{{ item }}'
       src: ansible/{{ item }}
     with_items: '{{ key_file.stdout_lines }}'
-  - *id001
-  - *id001
   - name: apt-get update;
     sudo: 'yes'
     apt:
