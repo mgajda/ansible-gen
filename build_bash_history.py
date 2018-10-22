@@ -123,6 +123,7 @@ def build_from_bash_history(btype, iname, bimage):
 					docker_comments = 'Installing python packages'
 
 				elif 'export' in cmd_arr:
+					ansible_skip = 1
 					# need to handle enviroment vairable, either using ansible environment or using ~/.bashrc
 					# currently thinking on it
 					print(cmd_arr[1])
@@ -307,6 +308,7 @@ def build_from_bash_history(btype, iname, bimage):
 				
 				if btype == 'ansible':
 					if ansible_skip == 0:
+						print new_task
 						header[0]['tasks'].append(new_task)
 				elif btype == 'docker':
 					append_to_dockerfile(docker_comments, docker_cmd)
