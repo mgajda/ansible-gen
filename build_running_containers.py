@@ -51,7 +51,7 @@ def build_from_running_containers(ids=None):
 		# default service name is same as image name, if netstat is not present in container
 		service_name = str(image)
 		pid=c.attrs['State']['Pid']
-		netstat_command=['sudo', 'nsenter', '-t', str(pid), '-n', 'netstat', '-tulpn']
+		netstat_command=['pkexec', 'nsenter', '-t', str(pid), '-n', 'netstat', '-tulpn']
 		netstat_output=subprocess.check_output(netstat_command)
 		for row in netstat_output.split('\n'):
 			if innerport in row:
