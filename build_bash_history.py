@@ -301,15 +301,6 @@ def build_from_bash_history(btype, iname, bimage):
 						'dest': dst+'/{{ item }}'}), 
 						('with_items', "{{ key_file.stdout_lines }}")]
 						append_to_ansible(header, command_line, sudo, new_task, 0)
-						#new_task = UnsortableOrderedDict([('name',command_line), ('sudo',sudo), \
-						#('local_action', 'shell ls '+cmd_arr[1]), \
-						#('register', 'key_file')])
-						#header[0]['tasks'].append(new_task)
-						#new_task = UnsortableOrderedDict([ \
-						#('copy', {'src': ''+src_loc[0]+'/{{ item }}', \
-						#'dest': dst+'/{{ item }}'}), 
-						#('with_items', "{{ key_file.stdout_lines }}")])
-						#header[0]['tasks'].append(new_task)
 				else:
 					print("Command "+ cmd_arr[0]+" not implemented or not found. Line no " + str(line_num))
 					continue;
