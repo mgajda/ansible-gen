@@ -46,16 +46,22 @@ def main():
                   callback=docker_args_callback,
 		  dest = 'docker_args_list')
 
+	parser.add_option('-a', '--aws-id',
+                  action="store",
+                  dest="aws_account_id",
+                  help="aws account id, where cluster need to create and docker registry")
+
 	options, args = parser.parse_args()
 
 	btype = options.build_type
 	iname = options.input_bash
 	bimage = options.base_image
 	container_list = options.docker_args_list
+	aws_account_id = options.aws_account_id
 
 	build_from_bash_history(btype, iname, bimage)
 	if btype == 'docker':
-		build_from_running_containers(container_list)
+		build_from_running_containers(container_list, aws_account_id)
 
 	# future steps..
 

@@ -10,7 +10,7 @@ import yaml
 import docker
 import subprocess
 
-def build_from_running_containers(ids=None):
+def build_from_running_containers(ids=None, account_id=None):
 	client = docker.from_env()
 	if ids==None:
 		containers = client.containers.list()
@@ -60,6 +60,11 @@ def build_from_running_containers(ids=None):
 
 		# append service
 		template['services'][service_name] = service
+
+		# if aws account id is defined
+		# 	build image with same tag as container and push to ECR
+		#       create task defination with port mapping and mount volume in terraform dir
+		#       create service.tf in terraform dir with app name
 
 	#print yaml.dump(template, default_flow_style=False)
 	with open('docker-compose.yml', 'w') as outfile:
