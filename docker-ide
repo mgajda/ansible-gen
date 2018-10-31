@@ -1,0 +1,3 @@
+#!/bin/bash
+
+tee docker.input | unbuffer docker run -it ${*} | tee docker.output
