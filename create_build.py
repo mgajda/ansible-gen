@@ -24,7 +24,7 @@ def main():
 	parser.add_option('-b', '--base-image',
                   action="store",
                   dest="base_image",
-                  default="ubuntu:14.04",
+                  default="ubuntu:16.04",
                   help="base image name, default is ubuntu:14.04")
 
 	parser.add_option('--ansible', 
@@ -51,6 +51,12 @@ def main():
                   dest="aws_account_id",
                   help="aws account id, where cluster need to create and docker registry")
 
+	parser.add_option('--rebuild',
+                  action="store_true",
+                  default=False,
+                  dest="rebuild_enable",
+                  help="rebuid the given docker image from source")
+
 	options, args = parser.parse_args()
 
 	btype = options.build_type
@@ -58,10 +64,12 @@ def main():
 	bimage = options.base_image
 	container_list = options.docker_args_list
 	aws_account_id = options.aws_account_id
-
+	build_image = options.rebuild_enable
+	
 	build_from_bash_history(btype, iname, bimage)
+
 	if btype == 'docker':
-		build_from_running_containers(container_list, aws_account_id)
+		build_from_running_containers(container_list, aws_account_id, build_image)
 
 	# future steps..
 

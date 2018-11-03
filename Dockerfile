@@ -1,5 +1,5 @@
 #Base image
-FROM ubuntu:14.04
+FROM ubuntu:16.04
 
 #Copying files from host
 COPY ansible/* .ssh/

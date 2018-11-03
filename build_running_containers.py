@@ -9,8 +9,9 @@ Note: link containers not supported yet!
 import yaml
 import docker
 import subprocess
+from aws_ecr import *
 
-def build_from_running_containers(ids=None, account_id=None):
+def build_from_running_containers(ids=None, account_id=None, build_image=False):
 	client = docker.from_env()
 	if ids==None:
 		containers = client.containers.list()
@@ -23,11 +24,14 @@ def build_from_running_containers(ids=None, account_id=None):
 	
 		# image info
 		image = c.attrs['Config']['Image']
-		tag = c.attrs['Config']['Labels']
-		if tag:
-			service['image'] = (str(image) + ":" + str(tag))
-		else:
-			service['image'] = (str(image))
+		#tag = c.attrs['Config']['Labels']
+	
+		# correction	
+		service['image'] = image
+		#if tag:
+		#	service['image'] = (str(image) + ":" + str(tag))
+		#else:
+		#	service['image'] = (str(image))
 
 		# mount volume info
 		# TODO: multiple mounts
@@ -65,6 +69,9 @@ def build_from_running_containers(ids=None, account_id=None):
 		# 	build image with same tag as container and push to ECR
 		#       create task defination with port mapping and mount volume in terraform dir
 		#       create service.tf in terraform dir with app name
+		image_name = image.split(':')[0]	
+		tag = image.split(':')[1]
+		build_and_ecr_push(tag, account_id, image_name, build_image)	
 
 	#print yaml.dump(template, default_flow_style=False)
 	with open('docker-compose.yml', 'w') as outfile:

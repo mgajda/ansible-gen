@@ -1,11 +1,6 @@
 services:
-  quay.io/mongodb/charts:v0.9.0@sha256:9ed4f9cf4a63ff6f8402c5802fb5933191b2f05b1eac6fec86fee5b9eb026bdb:
-    image: 'quay.io/mongodb/charts:v0.9.0@sha256:9ed4f9cf4a63ff6f8402c5802fb5933191b2f05b1eac6fec86fee5b9eb026bdb:{u''com.docker.swarm.task'':
-      u'''', u''maintainer'': u''NGINX Docker Maintainers <docker-maint@nginx.com>'',
-      u''com.docker.swarm.node.id'': u''n49z09m1gqasdlk646tmwn2v9'', u''com.docker.swarm.service.id'':
-      u''nke8udfzg69fkkp3wzglglwn4'', u''com.docker.swarm.task.name'': u''mongodb-charts_charts.1.hzcjpyr1wy7n66kcmw9vsr8ac'',
-      u''com.docker.stack.namespace'': u''mongodb-charts'', u''com.docker.swarm.service.name'':
-      u''mongodb-charts_charts'', u''com.docker.swarm.task.id'': u''hzcjpyr1wy7n66kcmw9vsr8ac''}'
-    volumes:
-    - /var/lib/docker/volumes/mongodb-charts_keys/_data:/mongodb-charts/volumes/keys
+  app:latest:
+    image: !!python/unicode 'app:latest'
+    ports:
+    - 8000:8000
 version: '3'
