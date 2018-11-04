@@ -1,6 +1,6 @@
 services:
   app:latest:
-    image: !!python/unicode 'app:latest'
+    image: app:latest
     ports:
     - 8000:8000
 version: '3'

@@ -27,7 +27,7 @@ def build_from_running_containers(ids=None, account_id=None, build_image=False):
 		#tag = c.attrs['Config']['Labels']
 	
 		# correction	
-		service['image'] = image
+		service['image'] = str(image)
 		#if tag:
 		#	service['image'] = (str(image) + ":" + str(tag))
 		#else:
