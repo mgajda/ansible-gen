@@ -57,9 +57,9 @@ def build_from_running_containers(ids=None, account_id=None, build_image=False):
 		pid=c.attrs['State']['Pid']
 		netstat_command=['pkexec', 'nsenter', '-t', str(pid), '-n', 'netstat', '-tulpn']
 		netstat_output=subprocess.check_output(netstat_command)
-		for row in netstat_output.split('\n'):
-			if innerport in row:
-				if row.split()[0] == 'tcp':
+		for row in netstat_output.split(b'\n'):
+			if str.encode(innerport) in row:
+				if row.split()[0] == b'tcp':
 					service_name = row.split()[6].split('/')[1]
 
 		# append service

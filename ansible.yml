@@ -1,81 +1,81 @@
 ---
-- name: Bash converted playbook
-  connection: localhost
-  hosts: localhost
-  remote_user: ubuntu
+- connection: localhost
   environment:
     PWD: /home/ubuntu
+  hosts: localhost
+  name: Bash converted playbook
+  remote_user: ubuntu
   tasks:
   - name: Set default working directory
     set_fact:
       cwd: /home/ubuntu
-  - name: scp ansible/* ie-scraper:.ssh/
-    sudo: 'no'
-    local_action: shell ls ansible/
+  - local_action: shell ls ansible/
+    name: scp ansible/* ie-scraper:.ssh/
     register: key_file
+    sudo: 'no'
   - copy:
       dest: '{{ cwd }}/.ssh//{{ item }}'
       src: ansible/{{ item }}
     with_items: '{{ key_file.stdout_lines }}'
-  - name: apt-get update;
-    sudo: 'yes'
-    apt:
+  - apt:
       update_cache: 'yes'
-  - name: apt-get dist-upgrade -y;
+    name: apt-get update;
     sudo: 'yes'
-    apt:
+  - apt:
       upgrade: dist
-  - name: apt-get install -y python-pip chromium-browser chromium-chromedriver
+    name: apt-get dist-upgrade -y;
     sudo: 'yes'
-    apt:
+  - apt:
       name: '{{ item }}'
       state: present
+    name: apt-get install -y python-pip chromium-browser chromium-chromedriver
+    sudo: 'yes'
     with_items:
     - python-pip
     - chromium-browser
     - chromium-chromedriver
-  - name: mkdir /media/scraped
-    sudo: 'no'
-    file:
+  - file:
       path: /media/scraped
       state: directory
-  - name: chown ubuntu:ubuntu /media/scraped
+    name: mkdir /media/scraped
     sudo: 'no'
-    file:
+  - file:
       dest: /media/scraped
       group: ubuntu
       owner: ubuntu
       recurse: 'yes'
+    name: chown ubuntu:ubuntu /media/scraped
+    sudo: 'no'
   - name: echo /dev/xvdp /media/scraped/ ext4 auto 0 1 >> /etc/fstab
-    sudo: 'no'
     shell: echo /dev/xvdp /media/scraped/ ext4 auto 0 1 >> /etc/fstab
-  - name: mount /media/scraped
     sudo: 'no'
-    mount:
+  - mount:
       path: /media/scraped
-  - name: chown -R ubuntu:ubuntu /media/scraped
+    name: mount /media/scraped
     sudo: 'no'
-    file:
+  - file:
       dest: /media/scraped
       group: ubuntu
       owner: ubuntu
       recurse: 'yes'
+    name: chown -R ubuntu:ubuntu /media/scraped
+    sudo: 'no'
   - name: git clone git@github.com:mgajda/scraper-python.git
-    sudo: 'no'
     shell: cd {{ cwd }} && git clone git@github.com:mgajda/scraper-python.git
-  - name: cd scraper-python
     sudo: 'no'
+  - name: cd scraper-python
     set_fact:
       cwd: '{{ cwd }}/scraper-python'
-  - name: pip install -r requirements.txt
     sudo: 'no'
+  - name: pip install -r requirements.txt
     pip:
       requirements: '{{ cwd }}/requirment.txt'
-  - name: rm -rf html logs output_csv
     sudo: 'no'
-    file:
+  - file:
       path: '{{ item }}'
       state: absent
+    name: rm -rf html logs output_csv
+    sudo: 'no'
     with_items:
     - '{{ cwd }}/html'
     - '{{ cwd }}/logs'

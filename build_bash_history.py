@@ -70,7 +70,7 @@ def build_from_bash_history(btype, iname, bimage):
 			line_num += 1
 			line = lines[i]
 			# This will ignore lines followed by # Error
- 			if i+1 < len(lines):
+			if i+1 < len(lines):
 				ne = lines[i + 1] 
 				if (ne.startswith( '# Error' )):
 					continue
@@ -218,7 +218,7 @@ def build_from_bash_history(btype, iname, bimage):
 								dname = durl.split(":")[0]
 								dtag = durl.split(":")[1]
 							else:
-								print opt
+								print (opt)
 						new_task = ('docker_image', {'dockerfile': dockerfile, 'name': dname, 'tag': dtag, 'path': '{{ cwd }}'})
 					if 'run' in cmd_arr:
 						ports = None; inner = None; outer = None
@@ -228,7 +228,7 @@ def build_from_bash_history(btype, iname, bimage):
 						for opt in it:
 							if opt == '-p':
 								ports = next(it)
-								print ports
+								print (ports)
 								inner = ports.split(":")[0]
 								outer = ports.split(":")[1]
 							elif opt == '-v':
@@ -276,9 +276,9 @@ def build_from_bash_history(btype, iname, bimage):
 						wildcard = 'yes'
 						cmd_arr[1] = re.sub('[*]', '', cmd_arr[1])
 					dst_path = cmd_arr[2].split(":")[1]
-					print dst_path
+					print (dst_path)
 					if dst_path is "":
-						print dst_path
+						print (dst_path)
 						dst = '{{ cwd }}'
 					elif dst_path[0] is '/':
 						# absolute path
