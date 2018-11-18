@@ -9,7 +9,9 @@ Note: link containers not supported yet!
 import yaml
 import docker
 import subprocess
+import json
 from aws_ecr import *
+from terraform_create import *
 
 def build_from_running_containers(ids=None, account_id=None, build_image=False):
 	client = docker.from_env()
@@ -71,7 +73,8 @@ def build_from_running_containers(ids=None, account_id=None, build_image=False):
 		#       create service.tf in terraform dir with app name
 		image_name = image.split(':')[0]	
 		tag = image.split(':')[1]
-		build_and_ecr_push(tag, account_id, image_name, build_image)	
+		build_and_ecr_push(tag, account_id, image_name, build_image)
+		create_task_definition(service_name, account_id, service)	
 
 	#print yaml.dump(template, default_flow_style=False)
 	with open('docker-compose.yml', 'w') as outfile:

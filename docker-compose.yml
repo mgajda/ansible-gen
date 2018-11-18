@@ -1,6 +1,6 @@
 services:
-  quay.io/mongodb/charts:v0.9.0@sha256:9ed4f9cf4a63ff6f8402c5802fb5933191b2f05b1eac6fec86fee5b9eb026bdb:
-    image: quay.io/mongodb/charts:v0.9.0@sha256:9ed4f9cf4a63ff6f8402c5802fb5933191b2f05b1eac6fec86fee5b9eb026bdb
-    volumes:
-    - /var/lib/docker/volumes/mongodb-charts_keys/_data:/mongodb-charts/volumes/keys
+  app:latest:
+    image: app:latest
+    ports:
+    - 8000:8000
 version: '3'
