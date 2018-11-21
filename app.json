@@ -1,0 +1,21 @@
+{
+    "image": "XXXXXXXXXX.dkr.ecr.eu-west-1.amazonaws.com/app:latest",
+    "essential": true,
+    "name": "app:latest",
+    "cpu": 10,
+    "portMappings": [
+        {
+            "containerPort": "8000",
+            "protocol": "tcp",
+            "hostPort": "8000"
+        }
+    ],
+    "memory": 512,
+    "volumesFrom": [],
+    "mountPoints": [
+        {
+            "sourceVolume": "/home/muhammad/server",
+            "containerPath": "/srv"
+        }
+    ]
+}

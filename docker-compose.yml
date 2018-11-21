@@ -3,4 +3,6 @@ services:
     image: app:latest
     ports:
     - 8000:8000
+    volumes:
+    - /home/muhammad/server:/srv
 version: '3'

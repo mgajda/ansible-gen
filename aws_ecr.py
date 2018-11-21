@@ -45,11 +45,11 @@ def build_and_ecr_push(version_number, aws_id, image_name, build_image):
     	# Make auth call and parse out results
         auth = ecr.get_authorization_token()
         token = auth["authorizationData"][0]["authorizationToken"]
-        username, password = base64.b64decode(token).split(':')
+        username, password = base64.b64decode(token).split(b':')
         endpoint = auth["authorizationData"][0]["proxyEndpoint"]
 
-        auth_config_payload = {'username': username, 'password': password}
-
+        auth_config_payload = {'username': username.decode('utf-8'), 'password': password.decode('utf-8')
+}
         print ("Tagging repo " + repo_tag)
         if docker_api.tag(image_name_with_tag, repo, str(version_number)) is False:
                raise RuntimeError("Tag appeared to fail: " + latest_tag)
@@ -64,11 +64,11 @@ def build_and_ecr_push(version_number, aws_id, image_name, build_image):
 def process_docker_api_line(payload):
     """ Process the output from API stream """
 
-    for segment in payload.split('\n'):
+    for segment in payload.split(b'\n'):
         line = segment.strip()
         if line:
             try:
-                line_payload = json.loads(line)
+                line_payload = json.loads(line.decode('utf-8'))
             except ValueError as ex:
                 print ("Could not decipher payload from API: " + ex.message)
             if line_payload:
