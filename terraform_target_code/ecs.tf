@@ -15,7 +15,7 @@ resource "aws_autoscaling_group" "ecs_autoscaling_group" {
 
 resource "aws_launch_configuration" "ecs_launch_configuration" {
     name = "launch configuration ${var.ecs_cluster_name}"
-    image_id = "${lookup(var.amis, var.region)}"
+    image_id = "${var.ami}"
     instance_type = "${var.instance_type}"
     security_groups = ["${aws_security_group.ecs_sg.id}"]
     iam_instance_profile = "${aws_iam_instance_profile.ecs_iam_instance_profile.name}"

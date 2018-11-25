@@ -1,8 +1,4 @@
 {
-    "image": "XXXXXXXXXX.dkr.ecr.eu-west-1.amazonaws.com/app:latest",
-    "essential": true,
-    "name": "app:latest",
-    "cpu": 10,
     "portMappings": [
         {
             "containerPort": "8000",
@@ -10,12 +6,16 @@
             "hostPort": "8000"
         }
     ],
-    "memory": 512,
+    "essential": true,
     "volumesFrom": [],
+    "memory": 512,
     "mountPoints": [
         {
-            "sourceVolume": "/home/muhammad/server",
-            "containerPath": "/srv"
+            "containerPath": "/srv",
+            "sourceVolume": "/home/muhammad/server"
         }
-    ]
+    ],
+    "name": "app:latest",
+    "image": "XXXXXXXXXX.dkr.ecr.eu-west-1.amazonaws.com/app:latest",
+    "cpu": 10
 }
