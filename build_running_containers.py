@@ -67,15 +67,17 @@ def build_from_running_containers(ids=None, account_id=None, build_image=False):
 		# append service
 		template['services'][service_name] = service
 
-		# if aws account id is defined
-		# 	build image with same tag as container and push to ECR
-		#       create task defination with port mapping and mount volume in terraform dir
-		#       create service.tf in terraform dir with app name
-		image_name = image.split(':')[0]	
-		tag = image.split(':')[1]
-		build_and_ecr_push(tag, account_id, image_name, build_image)
-		create_task_definition(service_name, account_id, service)
-		create_variables(service_name, outerport, 'ecs_app_cluster')
+		if account_id:
+			# build image with same tag as container and push to ECR
+			image_name = image.split(':')[0]	
+			tag = image.split(':')[1]
+			build_and_ecr_push(tag, account_id, image_name, build_image)
+
+			# create task defination with port mapping and mount volume in terraform dir
+			create_task_definition(service_name, account_id, service)
+
+			# create variables.tf in terraform dir with app name
+			create_variables(service_name, outerport, 'ecs_app_cluster')
 			
 	#print yaml.dump(template, default_flow_style=False)
 	with open('docker-compose.yml', 'w') as outfile:

@@ -1,8 +1,10 @@
 import json
 from terrascript import Terrascript, variable
+import config
 
 
 def create_task_definition(app_name, account_id, service):
+	task_definition_file = config.tf_dir + "/task-definitions/" + app_name.split(':')[0] + ".json"
 	data = {}  
 	data['name'] = app_name
 	data['image'] = account_id + '.dkr.ecr.eu-west-1.amazonaws.com/' + app_name
@@ -11,8 +13,8 @@ def create_task_definition(app_name, account_id, service):
 	data['portMappings'] = []
 	if 'ports' in service:
 		data['portMappings'].append({  
-    			'containerPort': service['ports'][0].split(':')[0],
-    			'hostPort': service['ports'][0].split(':')[1],
+    			'containerPort': int(service['ports'][0].split(':')[0]),
+    			'hostPort': int(service['ports'][0].split(':')[1]),
     			'protocol': 'tcp'
 		})
 	data['essential'] = True
@@ -23,11 +25,14 @@ def create_task_definition(app_name, account_id, service):
     			'containerPath': service['volumes'][0].split(':')[1]
 		})
 	data['volumesFrom'] = []  
-
-	with open('app.json', 'w') as outfile:  
-    		json.dump(data, outfile,  indent=4)
+	json_data = []
+	json_data.append(data)
+	print ("Creating file: " + task_definition_file)
+	with open(task_definition_file, 'w') as outfile:  
+    		json.dump(json_data, outfile,  indent=4)
 
 def create_variables(app_name, app_port, cluster_name):
+	var_file = config.tf_dir + "/variables.tf" 
 	ts = Terrascript()
 
 	var_access_key = variable('aws_access_key', default='')
@@ -52,5 +57,6 @@ def create_variables(app_name, app_port, cluster_name):
 	ts += var_app_port
 	ts += var_app_name
 
-	with open('variables.tf', 'w') as tfile:
+	print ("Creating file: " + var_file)
+	with open(var_file, 'w') as tfile:
 		tfile.write(ts.dump())
