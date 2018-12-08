@@ -75,9 +75,9 @@ def build_from_running_containers(ids=None, account_id=None, build_image=False):
 
 			# create task defination with port mapping and mount volume in terraform dir
 			create_task_definition(service_name, account_id, service)
-
+			
 			# create variables.tf in terraform dir with app name
-			create_variables(service_name, outerport, 'ecs_app_cluster')
+			create_variables(image_name, outerport, 'ecs_app_cluster')
 			
 	#print yaml.dump(template, default_flow_style=False)
 	with open('docker-compose.yml', 'w') as outfile:

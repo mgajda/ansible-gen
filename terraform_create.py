@@ -6,7 +6,7 @@ import config
 def create_task_definition(app_name, account_id, service):
 	task_definition_file = config.tf_dir + "/task-definitions/" + app_name.split(':')[0] + ".json"
 	data = {}  
-	data['name'] = app_name
+	data['name'] = app_name.split(':')[0]
 	data['image'] = account_id + '.dkr.ecr.eu-west-1.amazonaws.com/' + app_name
 	data['cpu'] = 10
 	data['memory'] = 512
