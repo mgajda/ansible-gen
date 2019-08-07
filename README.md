@@ -23,8 +23,8 @@ Additional options:
 and refers to remote as `ec2-instance`
 * `--remote` - the following history file was recorded remotely (default).
 
-## Minimum configuration commands supported
-### On remote
+## Configuration commands supported
+### Command supported by Ansible modules on remote
 Remote system commands supported should include at least:
 * `cat` to `crontab`, `/etc/fstab`, and `authorized_keys`
 * `pip`
@@ -34,15 +34,35 @@ Remote system commands supported should include at least:
 * `apt-get update`, `apt-get upgrade`, `apt-get dist-upgrade`
 * `apt-get install`
 * `mount`
+* `curl https://... | sh` should be supported to prime installation of essential tools:
+  - Stack
+  - HomeBrew
+  - Nix
 
 ### On local
 * `scp`
 
-### Phase 2 functionality on the remote
+### Package management functionality on the remote
 * `npm install`, and `npm update`
 * `bower install`, and `bower update`
 * `cp` service file to `nginx` directory
 * `docker run`, and `docker exec`
+* `brew install` and `brew cask install` should install respective packages
+* `mas install` should install MacOS-X Apple Store CLi with `brew` and then run command
+
+### Additional package management options
+* `--git <directory>` option should visit all (direct) subdirectories of a given directory, and add commands to clone them on the new machine (in same directory relative to `$HOME`, example directory `input/git`)
+* `--brew` option should run `brew list` to list installed packages, and use Homebrew module in Ansible to install them (example file: `input/mac/brew.list`)
+* `--mas` option should run `mas list` command to list installed Mac App Store apps and install them with `mas install $APPID` (example file: `input/mac/mas.list`)
+* `--npm` option should list Node packages installed directly (but not their dependencies!), and install them (example file: `input/npm.list`)
+
+### Git building
+
+If Git repo has a build script on the script below, we should automatically build it.
+In the background, since it may take long time:
+* `stack.yaml` -> `stack build`
+* `pier.yaml` -> `pier build`
+* `default.nix` -> `nix-shell --pure default.nix`
 
 ## Ideal use case
 
@@ -54,10 +74,17 @@ and run the `ansible-gen.py` to get fully functional template of ansible script.
 A lot of configuration tasks do not require tuning, and are done just a few times.
 Investing in development of Ansible scripts to run them seems a waste of time.
 
-
-# Stage 2
+# AWS functionality
 
 We would also like to copy&paste AWS instance config we make in GUI, and then put it into Git repo.
 Then we want to setup the instance from scratch with the very Ansible script we generate.
 
 [And we already know instance name, so we should be able to pull Amazon config easily, don't we?]
+
+# Mac support
+
+https://github.com/maybevoid/maybevoid.com.git
+
+# Future Linux support
+
+There will be additional script that performs unattended Linux install before running the generated configuration script.

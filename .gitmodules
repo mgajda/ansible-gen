@@ -1,0 +1,9 @@
+[submodule "input/git/json-autotype"]
+	path = input/git/json-autotype
+	url = https://github.com/mgajda/json-autotype.git
+[submodule "input/git/homplexity"]
+	path = input/git/homplexity
+	url = git@github.com:mgajda/homplexity.git
+[submodule "input/git/maybevoid.com"]
+	path = input/git/maybevoid.com
+	url = https://github.com/maybevoid/maybevoid.com.git
